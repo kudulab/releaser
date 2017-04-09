@@ -1,0 +1,232 @@
+#!/bin/bash
+
+# The functions here:
+#  * are independent of the main releaser file and of all the options set by an
+# end user.
+#  * does not assume any default arguments, all arguments must be explicitly set.
+#  * should not be invoked directly by an end user.
+#  * are here to have higher test coverage.
+
+set -e
+
+log_debug() {
+  if [ "$RELEASER_LOG_LEVEL" == "debug" ]; then
+    echo -e "$(date "+%d-%m-%Y %T") RELEASER debug: ${1}"
+  fi
+}
+log_info() {
+  echo -e "$(date "+%d-%m-%Y %T") RELEASER info: ${1}"
+}
+log_error() {
+  echo -e "\e[31mRELEASER error: $1\e[0m" >&2
+}
+log_warn() {
+  echo -e "\e[33mRELEASER warn: $1\e[0m"
+}
+
+# Arguments:
+#   changelog_file
+function get_last_version_from_changelog {
+  changelog_file="$1"
+  if [[ -z "${changelog_file}" ]];then
+    log_error "changelog_file not set"
+    return 1
+  fi
+  if [[ ! -f "${changelog_file}" ]];then
+    log_error "${changelog_file} does not exist"
+    return 1
+  fi
+  version=$(cat $changelog_file | head -1 | grep -o -e "[0-9]*\.[0-9]*\.[0-9]*")
+  if [[ "${version}" == "" ]];then
+    log_error "Could not get last version from ${changelog_file}"
+    return 1
+  fi
+  echo "${version}"
+}
+# Arguments: none
+function get_last_git_tagged_version {
+  tag="$(git tag 2>&1 | sort -V | tail -1)"
+  if [[ "${tag}" == *"Not a git repository"* ]];then
+    log_error "Not a git repository"
+    return 1
+  fi
+  echo "${tag}"
+}
+# Given the old_version in a SemVer format, e.g. 0.1.2, returns new version
+# with patch fragment increased by 1, e.g. 0.1.3.
+# Arguments:
+#   old_version
+function bump_patch_version {
+  old_version="$1"
+  if [[ -z "${old_version}" ]];then
+    log_error "old_version not set"
+    return 1
+  fi
+  if [[ ! "${old_version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+ ]]; then
+    log_error "old_version was not SemVer. It was: ${old_version}. Must be e.g. 0.1.2"
+    return 1
+  fi
+
+  #replace . with space so can split into an array
+  version_bits=(${old_version//./\ })
+  major=${version_bits[0]}
+  minor=${version_bits[1]}
+  patch=${version_bits[2]}
+
+  patch=$((patch+1))
+  echo "${major}.${minor}.${patch}"
+}
+
+# Replaces the whole line in a version file with that line and adds new version.
+# Arguments:
+#   line_pattern
+#   new_version
+#   version_file
+function locally_bump_version_in_versionfile {
+  line_pattern="$1"
+  if [[ -z "${line_pattern}" ]];then
+    log_error "line_pattern not set"
+    return 1
+  fi
+  new_version="$2"
+  if [[ -z "${new_version}" ]];then
+    log_error "new_version not set"
+    return 1
+  fi
+  version_file="$3"
+  if [[ -z "${version_file}" ]];then
+    log_error "version_file not set"
+    return 1
+  fi
+  if [[ ! -f "${version_file}" ]];then
+    log_error "${version_file} does not exist"
+    return 1
+  fi
+  new_versionfile_contents=$(sed "s/${line_pattern}.*/${line_pattern}\"${new_version}\"/g" ${version_file})
+  echo "${new_versionfile_contents}"
+  if [[ "${dryrun}" != "true" ]];then
+    echo "${new_versionfile_contents}" > "${version_file}"
+  fi
+}
+
+# Inserts the first line of changelog file: adds new version and date.
+# Arguments:
+#   new_version
+#   changelog_file
+function locally_bump_version_in_changelog {
+  new_version="$1"
+  changelog_file="$2"
+  if [[ -z "${new_version}" ]];then
+    log_error "new_version not set"
+    return 1
+  fi
+  if [[ -z "${changelog_file}" ]];then
+    log_error "changelog_file not set"
+    return 1
+  fi
+  if [[ ! -f "${changelog_file}" ]];then
+    log_error "${changelog_file} does not exist"
+    return 1
+  fi
+  release_date=$(date +%Y-%b-%d)
+  new_line="### ${new_version} (${release_date})"
+  echo "${new_line}"
+  if [[ "${dryrun}" != "true" ]];then
+    # add 1 line as the first line
+    sed -i "1i${new_line}" "${changelog_file}"
+  fi
+}
+
+# Replaces the whole line in a docker image version file with that line and adds new version.
+# Arguments:
+#   new_version
+#   version_file
+function locally_bump_version_in_versionfile_dockerimage {
+  locally_bump_version_in_versionfile "export this_image_tag=" "$1" "$2"
+}
+
+################################################################################
+
+function locally_bump_version_dockerimage {
+  version_file="$1"
+  changelog_file="$2"
+  new_version="$3"
+  if [[ -z "${new_version}" ]];then
+    last_released_version=$(get_last_git_tagged_version)
+    new_version="$(bump_patch_version ${last_released_version})"
+  fi
+
+  locally_bump_version_in_versionfile_dockerimage "${new_version}" "${version_file}"
+  locally_bump_version_in_changelog "${new_version}" "${changelog_file}"
+  log_info "Bumped to ${new_version} in ${version_file} and ${changelog_file}"
+}
+
+# Use this function if you want to test in a pipeline that the version was
+# already bumped in code.
+function verify_no_git_tag_for_latest_changelog_version {
+  changelog_file="$1"
+  version_from_changelog=$(get_last_version_from_changelog "${changelog_file}")
+  if git tag | grep "${version_from_changelog}"; then
+    log_error "The last version from changelog was already git tagged: ${version_from_changelog}"
+    return 1
+  fi
+}
+
+function docker_build {
+  image_dir="$1"
+  if [[ -z "${image_dir}" ]];then
+    log_error "image_dir not set"
+    return 1
+  fi
+  image_name="$2"
+  if [[ -z "${image_name}" ]];then
+    log_error "image_name not set"
+    return 1
+  fi
+  image_tag="$3"
+  if [[ -z "${image_tag}" ]];then
+    # set to the latest git commit hash
+    image_tag=$(git rev-parse HEAD)
+  fi
+  set -x
+  cd "${image_dir}"
+  docker build -t "${image_name}:${image_tag}" .
+
+  echo "export AIT_DOCKER_IMAGE_NAME=\"${image_name}\"" > imagerc
+  echo "export AIT_DOCKER_IMAGE_TAG=\"${image_tag}\"" >> imagerc
+
+  echo "{ \"docker_image_name\":\"${image_name}\"," > imagerc.json
+  echo "\"docker_image_tag\":\"${image_tag}\"," >> imagerc.json
+  echo "\"docker_image_url\":\"${image_name}:${image_tag}\" }" >> imagerc.json
+
+  echo "---" > imagerc.yml
+  echo "docker_image_name: ${image_name}" >> imagerc.yml
+  echo "docker_image_tag:${image_tag}" >> imagerc.yml
+  echo "docker_image_url:${image_name}:${image_tag}" >> imagerc.yml
+
+  if [[ "${dryrun}" != "true" ]];then
+    docker push "${image_name}:${image_tag}"
+  fi
+  set +x
+}
+function docker_push {
+  image_name="$1"
+  if [[ -z "${image_name}" ]];then
+    log_error "image_name not set"
+    return 1
+  fi
+  image_tag="$2"
+  if [[ -z "${image_tag}" ]];then
+    log_error "image_tag not set"
+    return 1
+  fi
+  testing_image_tag=$(git rev-parse HEAD)
+  set -x
+  docker tag "${image_name}:${testing_image_tag}" "${image_name}:${image_tag}"
+  docker tag "${image_name}:${testing_image_tag}" "${image_name}:latest"
+  if [[ "${dryrun}" != "true" ]];then
+    docker push "${image_name}:${image_tag}"
+    docker push "${image_name}:latest"
+  fi
+  set +x
+}

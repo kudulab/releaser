@@ -1,0 +1,64 @@
+#!/bin/bash
+
+# http://stackoverflow.com/questions/59895/can-a-bash-script-tell-what-directory-its-stored-in
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+source "${DIR}/releaser_functions"
+# TODO: ? source "${DIR}/releaser_version"
+
+source "releaser-variables"
+
+if [[ -z "${rls_project_type}" ]];then
+  echo "fail! project_type not set"
+  exit 1
+fi
+default_changelog_file="$(pwd)/CHANGELOG.md"
+rls_changelog_file="${rls_changelog_file:-${default_changelog_file}}"
+
+log_info "Project type: ${rls_project_type}"
+log_info "Current directory: $(pwd)"
+log_info "Changelog file: ${rls_changelog_file}"
+
+command="$1"
+
+set -e
+case "${rls_project_type}" in
+ide-docker-image)
+    case "${command}" in
+    bump)
+        locally_bump_version_dockerimage "${rls_version_file}" "${rls_changelog_file}" "${rls_new_version}"
+        exit 0
+        ;;
+    verify_version)
+        verify_no_git_tag_for_latest_changelog_version "${rls_changelog_file}"
+        exit 0
+        ;;
+    build)
+        docker_build "${rls_image_dir}" "${rls_image_name}" # no image tag set
+        exit 0
+        ;;
+    release)
+        new_version=$(get_last_version_from_changelog)
+        git tag "${new_git_tag}" && git push tags/"${new_version}"
+        exit 0
+        ;;
+    publish)
+        new_version=$(get_last_version_from_changelog)
+        docker_push "${rls_image_name}" "${new_version}"
+        exit 0
+        ;;
+    help)
+        echo "Available commands: bump, verify_version, build, release, publish"
+        exit 0
+        ;;
+    *)
+        echo "Invalid command: '${command}'"
+        exit 1
+        ;;
+    esac
+    exit 0
+    ;;
+*)
+    echo "Invalid project_type: '${project_type}'"
+    exit 1
+    ;;
+esac
