@@ -77,7 +77,7 @@ ide-docker-image)
         ;;
     release)
         new_version="$(get_next_version_from_oversion)"
-        git tag "${new_version}" && git push tags/"${new_version}"
+        git tag "${new_version}" && git push origin "${new_version}"
         exit 0
         ;;
     publish)
