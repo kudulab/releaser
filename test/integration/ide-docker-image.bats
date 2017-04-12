@@ -15,14 +15,14 @@ ide_docker_image_dir=$(readlink -f ${ide_docker_image_dir})
   assert_output --partial "Invalid command: 'not-existent-command'"
   assert_equal "$status" 1
 }
-@test "bump fails if no git tag" {
+@test "bump fails if no git tag and new version not set" {
   rm -rf "${ide_docker_image_dir}/.git"
   run /bin/bash -c "cd ${ide_docker_image_dir} && git init && ${releaser} bump"
   assert_output --partial "old_version not set"
   assert_equal "$status" 1
   rm -rf "${ide_docker_image_dir}/.git"
 }
-@test "bump" {
+@test "bump succeeds if git tag exists and new version not set" {
   rm -rf "${ide_docker_image_dir}/.git"
   run /bin/bash -c "cd ${ide_docker_image_dir} && git init && git add --all && git commit -m first && git tag 3.4.7 && ${releaser} bump"
   assert_output --partial "Bumped to 3.4.8"
@@ -31,6 +31,20 @@ ide_docker_image_dir=$(readlink -f ${ide_docker_image_dir})
   run /bin/bash -c "cat ${ide_docker_image_dir}/image/etc_ide.d/variables/60-variables.sh | grep \"3.4.8\""
   assert_equal "$status" 0
   run /bin/bash -c "cat ${ide_docker_image_dir}/CHANGELOG.md | grep \"### 3.4.8 (20\""
+  assert_equal "$status" 0
+
+  cd ${ide_docker_image_dir} && git reset --hard
+  rm -rf "${ide_docker_image_dir}/.git"
+}
+@test "bump fails if new version not set (and we don't care about git tags)" {
+  rm -rf "${ide_docker_image_dir}/.git"
+  run /bin/bash -c "cd ${ide_docker_image_dir} && git init && git add --all && git commit -m first && ${releaser} bump 11.24.2"
+  assert_output --partial "Bumped to 11.24.2"
+  assert_equal "$status" 0
+
+  run /bin/bash -c "cat ${ide_docker_image_dir}/image/etc_ide.d/variables/60-variables.sh | grep \"11.24.2\""
+  assert_equal "$status" 0
+  run /bin/bash -c "cat ${ide_docker_image_dir}/CHANGELOG.md | grep \"### 11.24.2 (20\""
   assert_equal "$status" 0
 
   cd ${ide_docker_image_dir} && git reset --hard

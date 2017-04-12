@@ -25,7 +25,8 @@ case "${rls_project_type}" in
 ide-docker-image)
     case "${command}" in
     bump)
-        locally_bump_version_dockerimage "${rls_version_file}" "${rls_changelog_file}" "${rls_new_version}"
+        new_version="$2"
+        locally_bump_version_dockerimage "${rls_version_file}" "${rls_changelog_file}" "${new_version}"
         exit 0
         ;;
     verify_version)

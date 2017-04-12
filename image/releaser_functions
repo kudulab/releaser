@@ -103,7 +103,8 @@ function locally_bump_version_in_versionfile {
     return 1
   fi
   new_versionfile_contents=$(sed "s/${line_pattern}.*/${line_pattern}\"${new_version}\"/g" ${version_file})
-  echo "${new_versionfile_contents}"
+  log_info "Will replace version file with:"
+  log_info "${new_versionfile_contents}"
   if [[ "${dryrun}" != "true" ]];then
     echo "${new_versionfile_contents}" > "${version_file}"
   fi
@@ -130,10 +131,15 @@ function locally_bump_version_in_changelog {
   fi
   release_date=$(date +%Y-%b-%d)
   new_line="### ${new_version} (${release_date})"
-  echo "${new_line}"
+  log_info "Will add new line to changelog:"
+  log_info "${new_line}"
   if [[ "${dryrun}" != "true" ]];then
-    # add 1 line as the first line
-    sed -i "1i${new_line}" "${changelog_file}"
+    old_changelog=$(cat "${changelog_file}")
+    echo "${new_line}" > "${changelog_file}"
+    echo "" >> "${changelog_file}"
+    echo "${old_changelog}" >> "${changelog_file}"
+    # this does not work, newline is not printed, eve with echo -e
+    new_changelog="${new_line}\n${old_changelog}"
   fi
 }
 
