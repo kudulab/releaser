@@ -25,11 +25,11 @@ set -e
 # commands that work for each project type
 case "${command}" in
 get_next_version)
-  get_next_version
+  get_next_version_from_oversion
   exit 0
   ;;
 set_next_version)
-  set_next_version "$2"
+  set_next_version_into_oversion "$2"
   exit 0
   ;;
 esac
@@ -40,11 +40,33 @@ ide-docker-image)
     case "${command}" in
     bump)
         new_version="$2"
-        locally_bump_version_dockerimage "${rls_version_file}" "${rls_changelog_file}" "${new_version}"
+        if [[ -z "${new_version}" ]];then
+          # get next_version from Consul, which was last released
+          old_version="$(get_next_version_from_oversion)"
+          new_version="$(bump_patch_version ${last_released_version})"
+        fi
+        # set it locally
+        locally_bump_version_in_versionfile_dockerimage "${new_version}" "${version_file}"
+        locally_bump_version_in_changelog "${new_version}" "${changelog_file}"
+        log_info "Bumped to ${new_version} in ${version_file} and ${changelog_file}"
+        # set it in Consul
+        set_next_version_into_oversion "${new_version}"
+        log_info "Bumped to ${new_version} in OVersion backend"
         exit 0
         ;;
     verify_version)
-        verify_no_git_tag_for_latest_changelog_version "${rls_changelog_file}"
+        # Test that the version was not already released.
+        version_from_changelog=$(get_last_version_from_changelog "${rls_changelog_file}")
+        if git tag | grep "${version_from_changelog}"; then
+          log_error "The last version from changelog was already git tagged: ${version_from_changelog}"
+          exit 1
+        fi
+        version_from_oversion=$(get_next_version_from_oversion)
+        if git tag | grep "${version_from_oversion}"; then
+          log_error "The last version from oversion was already git tagged: ${version_from_oversion}"
+          exit 1
+        fi
+        log_info "Version verified successfully"
         exit 0
         ;;
     build)
@@ -52,8 +74,8 @@ ide-docker-image)
         exit 0
         ;;
     release)
-        new_version=$(get_last_version_from_changelog)
-        git tag "${new_git_tag}" && git push tags/"${new_version}"
+        new_version=$(get_last_version_from_changelog "${rls_changelog_file}")
+        git tag "${new_version}" && git push tags/"${new_version}"
         exit 0
         ;;
     publish)
