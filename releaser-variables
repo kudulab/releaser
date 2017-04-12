@@ -1,0 +1,4 @@
+rls_project_type="ide-docker-image"
+rls_version_file="image/etc_ide.d/variables/60-variables.sh"
+rls_image_name="docker-registry.ai-traders.com/releaser"
+rls_image_dir="./image"
