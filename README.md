@@ -15,9 +15,9 @@ There are many functions to choose from. Recommended usage is presented below.
     `releaser bump 1.2.3` to bump to a particular version
     * merge that branch into master and push to git server
     * CI pipeline runs: `releaser verify_version`
-    * CI pipeline runs: `releaser build`
+    * CI pipeline runs: `releaser build` -- TODO: this will probably be removed, because it should not be implemented here, use dockerimagerake gem for now
     * CI pipeline runs: `releaser release`
-    * CI pipeline runs: `releaser publish`
+    * CI pipeline runs: `releaser publish` -- TODO: this will probably be removed, because it should not be implemented here, use dockerimagerake gem for now
 
 
 Releaser uses itself, which is treated as true integration test.
@@ -26,7 +26,7 @@ Releaser uses itself, which is treated as true integration test.
 
 Environment to run tests:
 ```
-sudo ./install-bats.sh
+sudo ./test/install-bats.sh
 ```
 
 Run unit tests:
