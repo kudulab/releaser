@@ -15,47 +15,61 @@ ide_docker_image_dir=$(readlink -f ${ide_docker_image_dir})
   assert_output --partial "Invalid command: 'not-existent-command'"
   assert_equal "$status" 1
 }
-# @test "bump fails if no git tag and new version not set" {
-#   rm -rf "${ide_docker_image_dir}/.git"
-#   run /bin/bash -c "cd ${ide_docker_image_dir} && git init && ${releaser} bump"
-#   assert_output --partial "old_version not set"
-#   assert_equal "$status" 1
-#   rm -rf "${ide_docker_image_dir}/.git"
-# }
-# @test "bump succeeds if git tag exists and new version not set" {
-#   rm -rf "${ide_docker_image_dir}/.git"
-#   run /bin/bash -c "cd ${ide_docker_image_dir} && git init && git add --all && git commit -m first && git tag 3.4.7 && ${releaser} bump"
-#   assert_output --partial "Bumped to 3.4.8"
-#   assert_equal "$status" 0
-#
-#   run /bin/bash -c "cat ${ide_docker_image_dir}/image/etc_ide.d/variables/60-variables.sh | grep \"3.4.8\""
-#   assert_equal "$status" 0
-#   run /bin/bash -c "cat ${ide_docker_image_dir}/CHANGELOG.md | grep \"### 3.4.8 (20\""
-#   assert_equal "$status" 0
-#
-#   cd ${ide_docker_image_dir} && git reset --hard
-#   rm -rf "${ide_docker_image_dir}/.git"
-# }
-# @test "bump fails if new version not set (and we don't care about git tags)" {
-#   rm -rf "${ide_docker_image_dir}/.git"
-#   run /bin/bash -c "cd ${ide_docker_image_dir} && git init && git add --all && git commit -m first && ${releaser} bump 11.24.2"
-#   assert_output --partial "Bumped to 11.24.2"
-#   assert_equal "$status" 0
-#
-#   run /bin/bash -c "cat ${ide_docker_image_dir}/image/etc_ide.d/variables/60-variables.sh | grep \"11.24.2\""
-#   assert_equal "$status" 0
-#   run /bin/bash -c "cat ${ide_docker_image_dir}/CHANGELOG.md | grep \"### 11.24.2 (20\""
-#   assert_equal "$status" 0
-#
-#   cd ${ide_docker_image_dir} && git reset --hard
-#   rm -rf "${ide_docker_image_dir}/.git"
-# }
+@test "bump fails if new version not set and cannot get version from OVersion backend" {
+  rm -rf "${ide_docker_image_dir}123"
+  mkdir -p "${ide_docker_image_dir}123"
+  run /bin/bash -c "cd ${ide_docker_image_dir}123 && ${releaser} bump"
+  assert_output --partial "releaser-variables: No such file or directory"
+  assert_equal "$status" 1
+
+  # cleanup
+  rm -rf "${ide_docker_image_dir}123"
+}
+@test "bump succeeds if new version not set and we can get version from OVersion backend" {
+  rm -rf "${ide_docker_image_dir}/.git"
+  run /bin/bash -c "cd ${ide_docker_image_dir} && git init && git add --all && git commit -m first && ${releaser} bump"
+  assert_output --partial "Got next_version from Consul: 0.1.0"
+  assert_output --partial "New version will be: 0.1.1"
+  assert_output --partial "Bumped to 0.1.1"
+  assert_output --partial "Set next_version into Consul: 0.1.1"
+  assert_equal "$status" 0
+
+  run /bin/bash -c "cat ${ide_docker_image_dir}/image/etc_ide.d/variables/60-variables.sh | grep \"0.1.1\""
+  assert_equal "$status" 0
+  run /bin/bash -c "cat ${ide_docker_image_dir}/CHANGELOG.md | head -1 | grep \"### 0.1.1 (20\""
+  assert_equal "$status" 0
+
+  # cleanup
+  cd ${ide_docker_image_dir} && git reset --hard
+  rm -rf "${ide_docker_image_dir}/.git"
+  run /bin/bash -c "cd ${ide_docker_image_dir} && ${releaser} set_next_version 0.1.0"
+}
+@test "bump succeeds if new version set" {
+  rm -rf "${ide_docker_image_dir}/.git"
+  run /bin/bash -c "cd ${ide_docker_image_dir} && git init && git add --all && git commit -m first && ${releaser} bump 0.0.13"
+  assert_output --partial "New version will be: 0.0.13"
+  assert_output --partial "Bumped to 0.0.13"
+  assert_output --partial "Set next_version into Consul: 0.0.13"
+  assert_equal "$status" 0
+
+  run /bin/bash -c "cat ${ide_docker_image_dir}/image/etc_ide.d/variables/60-variables.sh | grep \"0.0.13\""
+  assert_equal "$status" 0
+  run /bin/bash -c "cat ${ide_docker_image_dir}/CHANGELOG.md | grep \"### 0.0.13 (20\""
+  assert_equal "$status" 0
+
+  # cleanup
+  cd ${ide_docker_image_dir} && git reset --hard
+  rm -rf "${ide_docker_image_dir}/.git"
+  run /bin/bash -c "cd ${ide_docker_image_dir} && ${releaser} set_next_version 0.1.0"
+}
 
 @test "verify_version returns 1 if there is git tag for next_version from oversion" {
   rm -rf "${ide_docker_image_dir}/.git"
   run /bin/bash -c "cd ${ide_docker_image_dir} && git init && git add --all && git commit -m first && git tag 0.1.0 && ${releaser} verify_version"
   assert_output --partial "The last version from oversion was already git tagged"
   assert_equal "$status" 1
+
+  # cleanup
   rm -rf "${ide_docker_image_dir}/.git"
 }
 @test "verify_version returns 1 if there is git tag for last changelog version" {
@@ -63,6 +77,8 @@ ide_docker_image_dir=$(readlink -f ${ide_docker_image_dir})
   run /bin/bash -c "cd ${ide_docker_image_dir} && git init && git add --all && git commit -m first && git tag 0.1.1 && ${releaser} verify_version"
   assert_output --partial "The last version from changelog was already git tagged"
   assert_equal "$status" 1
+
+  # cleanup
   rm -rf "${ide_docker_image_dir}/.git"
 }
 @test "verify_version returns 0 if there is no git tag for last changelog version and next_version from oversion" {
@@ -70,6 +86,8 @@ ide_docker_image_dir=$(readlink -f ${ide_docker_image_dir})
   run /bin/bash -c "cd ${ide_docker_image_dir} && git init && git add --all && git commit -m first && git tag 0.1.2 && ${releaser} verify_version"
   assert_output --partial "Version verified successfully"
   assert_equal "$status" 0
+
+  # cleanup
   rm -rf "${ide_docker_image_dir}/.git"
 }
 

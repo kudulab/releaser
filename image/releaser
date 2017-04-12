@@ -43,15 +43,17 @@ ide-docker-image)
         if [[ -z "${new_version}" ]];then
           # get next_version from Consul, which was last released
           old_version="$(get_next_version_from_oversion)"
-          new_version="$(bump_patch_version ${last_released_version})"
+          new_version="$(bump_patch_version ${old_version})"
         fi
+        log_debug "Validating new_version"
+        validate_version_is_semver "${new_version}"
+        log_info "New version will be: ${new_version}"
         # set it locally
-        locally_bump_version_in_versionfile_dockerimage "${new_version}" "${version_file}"
-        locally_bump_version_in_changelog "${new_version}" "${changelog_file}"
-        log_info "Bumped to ${new_version} in ${version_file} and ${changelog_file}"
+        locally_bump_version_in_versionfile_dockerimage "${new_version}" "${rls_version_file}"
+        locally_bump_version_in_changelog "${new_version}" "${rls_changelog_file}"
+        log_info "Bumped to ${new_version} in ${rls_version_file} and ${rls_changelog_file}"
         # set it in Consul
         set_next_version_into_oversion "${new_version}"
-        log_info "Bumped to ${new_version} in OVersion backend"
         exit 0
         ;;
     verify_version)

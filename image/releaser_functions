@@ -6,6 +6,9 @@
 #  * does not assume any default arguments, all arguments must be explicitly set.
 #  * should not be invoked directly by an end user.
 #  * are here to have higher test coverage.
+#  * are supposed to be reused in many places. If a function concerns only 1
+# project type, it should probably be in releaser main file. Unless keeping
+# the function here will help you test it.
 
 set -e
 
@@ -22,6 +25,8 @@ log_info() {
 }
 log_error() {
   echo -e "\e[31m$(date "+%d-%m-%Y %T") RELEASER error: $1\e[0m" >&2
+  echo -e "\e[31m$(date "+%d-%m-%Y %T") RELEASER error: File: ${BASH_SOURCE[0]}\e[0m" >&2
+  echo -e "\e[31m$(date "+%d-%m-%Y %T") RELEASER error: Line numbers: ${BASH_LINENO[*]}\e[0m" >&2
 }
 log_warn() {
   echo -e "\e[33m$(date "+%d-%m-%Y %T") RELEASER warn: $1\e[0m" >&2
@@ -162,10 +167,8 @@ function bump_patch_version {
     log_error "old_version not set"
     return 1
   fi
-  if [[ ! "${old_version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+ ]]; then
-    log_error "old_version was not SemVer. It was: ${old_version}. Must be e.g. 0.1.2"
-    return 1
-  fi
+  log_debug "Validating old_version"
+  validate_version_is_semver "${old_version}"
 
   #replace . with space so can split into an array
   version_bits=(${old_version//./\ })
@@ -175,6 +178,19 @@ function bump_patch_version {
 
   patch=$((patch+1))
   echo "${major}.${minor}.${patch}"
+}
+# Arguments:
+#   * version
+function validate_version_is_semver {
+  version="$1"
+  if [[ -z "${version}" ]];then
+    log_error "version not set"
+    return 1
+  fi
+  if [[ ! "${version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+ ]]; then
+    log_error "Version was not SemVer. It was: ${version}. Must be e.g. 0.1.2"
+    return 1
+  fi
 }
 
 # Replaces the whole line in a version file with that line and adds new version.
@@ -203,8 +219,8 @@ function locally_bump_version_in_versionfile {
     return 1
   fi
   new_versionfile_contents=$(sed "s/${line_pattern}.*/${line_pattern}\"${new_version}\"/g" ${version_file})
-  log_info "Will replace version file with:"
-  log_info "${new_versionfile_contents}"
+  log_debug "Will replace version file with:"
+  log_debug "${new_versionfile_contents}"
   if [[ "${dryrun}" != "true" ]];then
     echo "${new_versionfile_contents}" > "${version_file}"
   fi
@@ -231,8 +247,8 @@ function locally_bump_version_in_changelog {
   fi
   release_date=$(date +%Y-%b-%d)
   new_line="### ${new_version} (${release_date})"
-  log_info "Will add new line to changelog:"
-  log_info "${new_line}"
+  log_debug "Will add new line to changelog:"
+  log_debug "${new_line}"
   if [[ "${dryrun}" != "true" ]];then
     old_changelog=$(cat "${changelog_file}")
     echo "${new_line}" > "${changelog_file}"
