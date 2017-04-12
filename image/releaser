@@ -21,6 +21,20 @@ log_info "Changelog file: ${rls_changelog_file}"
 command="$1"
 
 set -e
+
+# commands that work for each project type
+case "${command}" in
+get_next_version)
+  get_next_version
+  exit 0
+  ;;
+set_next_version)
+  set_next_version "$2"
+  exit 0
+  ;;
+esac
+
+# commands that work for particular project type
 case "${rls_project_type}" in
 ide-docker-image)
     case "${command}" in

@@ -9,19 +9,22 @@
 
 set -e
 
+# Each log output goes to stderror, so that we can return value from functions
+# with stdout. (Curl does the same).
+
 log_debug() {
   if [ "$RELEASER_LOG_LEVEL" == "debug" ]; then
-    echo -e "$(date "+%d-%m-%Y %T") RELEASER debug: ${1}"
+    echo -e "$(date "+%d-%m-%Y %T") RELEASER debug: ${1}" >&2
   fi
 }
 log_info() {
-  echo -e "$(date "+%d-%m-%Y %T") RELEASER info: ${1}"
+  echo -e "$(date "+%d-%m-%Y %T") RELEASER info: ${1}" >&2
 }
 log_error() {
-  echo -e "\e[31mRELEASER error: $1\e[0m" >&2
+  echo -e "\e[31m$(date "+%d-%m-%Y %T") RELEASER error: $1\e[0m" >&2
 }
 log_warn() {
-  echo -e "\e[33mRELEASER warn: $1\e[0m"
+  echo -e "\e[33m$(date "+%d-%m-%Y %T") RELEASER warn: $1\e[0m" >&2
 }
 
 # Arguments:
@@ -51,6 +54,73 @@ function get_last_git_tagged_version {
     return 1
   fi
   echo "${tag}"
+}
+
+# function from: http://stackoverflow.com/a/21189044/4457564
+# Arguments:
+#  * path to yml file
+#  * prefix so that imported settings all have a common prefix (which will reduce
+# the risk of namespace collisions)
+function parse_yaml {
+   local prefix=$2
+   local s='[[:space:]]*' w='[a-zA-Z0-9_]*' fs=$(echo @|tr @ '\034')
+   sed -ne "s|^\($s\):|\1|" \
+        -e "s|^\($s\)\($w\)$s:$s[\"']\(.*\)[\"']$s\$|\1$fs\2$fs\3|p" \
+        -e "s|^\($s\)\($w\)$s:$s\(.*\)$s\$|\1$fs\2$fs\3|p"  $1 |
+   awk -F$fs '{
+      indent = length($1)/2;
+      vname[indent] = $2;
+      for (i in vname) {if (i > indent) {delete vname[i]}}
+      if (length($3) > 0) {
+         vn=""; for (i=0; i<indent; i++) {vn=(vn)(vname[i])("_")}
+         printf("%s%s%s=\"%s\"\n", "'$prefix'",vn, $2, $3);
+      }
+   }'
+}
+# Arguments:
+#   none, but oversion.yml must exist
+function parse_oversion_file {
+  oversion_file="oversion.yml"
+  if [[ ! -f "${oversion_file}" ]];then
+    log_error "${oversion_file} does not exist"
+    return 1
+  fi
+  log_debug "Parsing ${oversion_file}"
+  oversion_file_variables=$(parse_yaml "${oversion_file}" "OVERSION_")
+  for oversion_file_variable in $oversion_file_variables; do
+    # split the variable into name and value or else value will be quoted
+    name=$(echo "${oversion_file_variable}" | cut -d '=' -f1)
+    value=$(echo "${oversion_file_variable}" | cut -d '=' -f2)
+    value=$(echo "$value" | sed -e 's/^"//' -e 's/"$//')
+    export "${name}=${value}"
+    log_debug "Exported variable: ${name}=${value}"
+  done
+  log_debug "Done parsing ${oversion_file}"
+}
+
+function get_next_version {
+  parse_oversion_file
+  if [[ "${OVERSION_backend}" == "consul" ]]; then
+    if [[ -z "${OVERSION_consul_url}" ]]; then
+      log_error "OVERSION_consul_url not set, set consul_url in oversion file"
+      return 1
+    fi
+    if [[ -z "${OVERSION_project_name}" ]]; then
+      log_error "OVERSION_project_name not set, set project_name in oversion file"
+      return 1
+    fi
+    full_url="${OVERSION_consul_url}/v1/kv/projects/${OVERSION_project_name}/next_version?raw"
+    next_version=$(curl -X GET -v ${full_url} 2>/dev/null)
+    if [[ "${next_version}" == "" ]]; then
+      log_error "Could not get next_version from Consul. Is it set? Is curl installed?"
+      return 1
+    fi
+    log_info "next_version from Consul: ${next_version}"
+  else
+    log_error "Not supported backend: ${OVERSION_backend}"
+    return 1
+  fi
+  echo "${next_version}"
 }
 # Given the old_version in a SemVer format, e.g. 0.1.2, returns new version
 # with patch fragment increased by 1, e.g. 0.1.3.
