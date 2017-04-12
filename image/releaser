@@ -5,7 +5,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 source "${DIR}/releaser_functions"
 # TODO: ? source "${DIR}/releaser_version"
 
-source "releaser-variables"
+source "releaserrc"
 
 if [[ -z "${rls_project_type}" ]];then
   echo "fail! project_type not set"

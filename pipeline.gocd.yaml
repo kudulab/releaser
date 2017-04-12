@@ -26,19 +26,21 @@ pipelines:
                 - small
               tasks:
                 - exec:
-                    command: ide
+                    command: bash
                     # TODO: we need bats installed on go-agents id:10858
                     arguments:
+                      - -c
                       - sudo ./test/install-bats.sh && bats ./test/unit/*.bats
-            itest_dryrun:
+            itest:
               resources:
                 - docker
                 - small
               tasks:
                 - exec:
-                    command: ide
+                    command: bash
                     # TODO: we need bats installed on go-agents id:10858
                     arguments:
+                      - -c
                       - sudo ./test/install-bats.sh && bats ./test/integration/*.bats
       - build:
           clean_workspace: true

@@ -6,7 +6,7 @@ FROM alpine:3.5
 # For releaser:
 # * coreutils is needed for sort to have -V option
 RUN echo "http://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories && \
-  apk add --no-cache bash shadow sudo git coreutils && \
+  apk add --no-cache bash shadow sudo git coreutils curl && \
   git clone --depth 1 -b 0.7.3 https://github.com/ai-traders/ide.git /tmp/ide_git && \
   /tmp/ide_git/ide_image_scripts/src/install.sh && \
   rm -r /tmp/ide_git && \

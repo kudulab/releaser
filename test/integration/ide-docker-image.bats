@@ -19,7 +19,7 @@ ide_docker_image_dir=$(readlink -f ${ide_docker_image_dir})
   rm -rf "${ide_docker_image_dir}123"
   mkdir -p "${ide_docker_image_dir}123"
   run /bin/bash -c "cd ${ide_docker_image_dir}123 && ${releaser} bump"
-  assert_output --partial "releaser-variables: No such file or directory"
+  assert_output --partial "releaserrc: No such file or directory"
   assert_equal "$status" 1
 
   # cleanup
