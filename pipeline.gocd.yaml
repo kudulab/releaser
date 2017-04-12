@@ -71,12 +71,12 @@ pipelines:
                     is_file: yes
                     source: imagerc
                     destination: image/
-                # imagerc file is sourced TODO
                 - exec:
-                    command: ide
-                    # TODO: we need bats-ide or bats installed on go-agents
+                    command: bash
+                    # TODO: we need bats installed on go-agents id:10858
                     arguments:
-                      - sudo ./install-bats.sh && bats test/integration/*.bats
+                      - -c
+                      - sudo ./test/install-bats.sh && source image/imagerc && bats test/acceptance/*.bats
       - release:
           clean_workspace: true
           jobs:
