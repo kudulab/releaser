@@ -76,12 +76,12 @@ ide-docker-image)
         exit 0
         ;;
     release)
-        new_version=$(get_last_version_from_changelog "${rls_changelog_file}")
+        new_version="$(get_next_version_from_oversion)"
         git tag "${new_version}" && git push tags/"${new_version}"
         exit 0
         ;;
     publish)
-        new_version=$(get_last_version_from_changelog)
+        new_version="$(get_next_version_from_oversion)"
         docker_push "${rls_image_name}" "${new_version}"
         exit 0
         ;;

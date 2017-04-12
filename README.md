@@ -44,6 +44,10 @@ releaser set_next_version 0.2.4
 
 Releaser uses itself, which is treated as true integration test.
 
+### Other
+Idea: implement a function to write to changelog with `Unreleased` in contents.
+ So that release stage can be failed if such changelog contents.
+
 ## Development
 
 Environment to run tests:
