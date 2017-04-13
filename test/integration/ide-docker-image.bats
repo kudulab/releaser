@@ -82,13 +82,17 @@ ide_docker_image_dir=$(readlink -f ${ide_docker_image_dir})
   rm -rf "${ide_docker_image_dir}/.git"
 }
 @test "verify_version returns 0 if there is no git tag for last changelog version and next_version from oversion" {
+  # we pretend that 0.1.0 was already released and next version is 0.1.1 (not released)
+
+  run /bin/bash -c "cd ${ide_docker_image_dir} && ${releaser} set_next_version \"0.1.1\""
   rm -rf "${ide_docker_image_dir}/.git"
-  run /bin/bash -c "cd ${ide_docker_image_dir} && git init && git add --all && git commit -m first && git tag 0.1.2 && ${releaser} verify_version"
+  run /bin/bash -c "cd ${ide_docker_image_dir} && git init && git add --all && git commit -m first && git tag 0.1.0 && ${releaser} verify_version"
   assert_output --partial "Version verified successfully"
   assert_equal "$status" 0
 
   # cleanup
   rm -rf "${ide_docker_image_dir}/.git"
+  run /bin/bash -c "cd ${ide_docker_image_dir} && ${releaser} set_next_version \"0.1.0\""
 }
 
 # function clean_docker_images {

@@ -87,11 +87,19 @@ pipelines:
                 - docker
                 - small
               tasks:
+                - fetch:
+                    stage: build
+                    job: docker_image
+                    is_file: yes
+                    source: imagerc
+                    destination: image/
                 - exec:
+                    # treat this as integration test and run in the just build
+                    # releaser ide docker image
                     command: /bin/bash
                     arguments:
                       - -c
-                      - ./image/releaser release
+                      - source image/imagerc && echo "IDE_DOCKER_IMAGE=${AIT_DOCKER_IMAGE_NAME}:${AIT_DOCKER_IMAGE_TAG}" > Idefile && ide releaser release
       - publish:
           clean_workspace: true
           jobs:

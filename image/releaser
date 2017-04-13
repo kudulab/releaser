@@ -68,6 +68,10 @@ ide-docker-image)
           log_error "The last version from oversion was already git tagged: ${version_from_oversion}"
           exit 1
         fi
+        if [[ "${version_from_changelog}" != "${version_from_oversion}" ]]; then
+          log_error "version_from_changelog: ${version_from_changelog} != version_from_oversion: ${version_from_oversion}"
+          exit 1
+        fi
         log_info "Version verified successfully"
         exit 0
         ;;
