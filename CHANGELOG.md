@@ -1,3 +1,5 @@
+### 0.1.2 (2017-Apr-13)
+
 * install openssh in releaser ide docker image
 * use releaser from ide docker image to release releaser
 
