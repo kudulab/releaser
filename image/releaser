@@ -80,6 +80,9 @@ ide-docker-image)
         exit 0
         ;;
     release)
+        # You may be tempted to repeat verify_version here,
+        # but when there is already a git tag present, then trial to create
+        # it again will fail anyways.
         new_version="$(get_next_version_from_oversion)"
         git tag "${new_version}" && git push origin "${new_version}"
         exit 0

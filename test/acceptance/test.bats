@@ -14,8 +14,7 @@ setup() {
   echo
   echo "IDE_DOCKER_IMAGE=${AIT_DOCKER_IMAGE_NAME}:${AIT_DOCKER_IMAGE_TAG}" > Idefile.to_be_tested
   echo "IDE_IDENTITY=$(pwd)/test/acceptance/ide_identities/full" >> Idefile.to_be_tested
-  # IDE_WORK is set to current directory, docker-releaser is ide-docker-image
-  # type of project
+  echo "IDE_WORK=$(pwd)/test/test-files/ide-docker-image" >> Idefile.to_be_tested
 }
 
 # Just test that releaser executable is in the docker image and it is invocable
@@ -24,5 +23,13 @@ setup() {
 @test "releaser is invocable" {
   run /bin/bash -c "ide --idefile Idefile.to_be_tested -- releaser help"
   assert_output --partial "Available commands: bump, verify_version, build, release, publish"
+  assert_equal "$status" 0
+}
+
+@test "can save command output to a variable" {
+  # ide >= 0.8.0 is needed
+  version=$(ide --idefile Idefile.to_be_tested --quiet --force_not_interactive -- "releaser get_next_version")
+  run echo "$version"
+  assert_output "0.1.0"
   assert_equal "$status" 0
 }

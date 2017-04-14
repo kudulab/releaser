@@ -2,7 +2,7 @@ load '/opt/bats-support/load.bash'
 load '/opt/bats-assert/load.bash'
 
 releaser=$(readlink -f ./image/releaser)
-ide_docker_image_dir="test/integration/test-files/ide-docker-image"
+ide_docker_image_dir="test/test-files/ide-docker-image"
 ide_docker_image_dir=$(readlink -f ${ide_docker_image_dir})
 
 @test "get_next_version" {

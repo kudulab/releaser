@@ -286,6 +286,7 @@ function docker_build {
     image_tag=$(git rev-parse HEAD)
   fi
   set -x
+  initial_dir="$(pwd)"
   cd "${image_dir}"
   docker build -t "${image_name}:${image_tag}" .
 
@@ -304,6 +305,7 @@ function docker_build {
   if [[ "${dryrun}" != "true" ]];then
     docker push "${image_name}:${image_tag}"
   fi
+  cd "${initial_dir}"
   set +x
 }
 function docker_push {
@@ -312,13 +314,19 @@ function docker_push {
     log_error "image_name not set"
     return 1
   fi
+  log_info "image_name set to: ${image_name}"
+
   image_tag="$2"
   if [[ -z "${image_tag}" ]];then
-    log_error "image_tag not set"
-    return 1
+    # needs ide >= 0.8.0
+    image_tag=$(ide --idefile Idefile.to_be_tested --quiet --force_not_interactive -- "releaser get_next_version")
+    log_info "image_tag set to: ${image_tag}"
   fi
   testing_image_tag=$(git rev-parse HEAD)
+  log_info "testing_image_tag set to: ${testing_image_tag}"
   set -x
+  # if docker image does not exist locally, then "docker tag" will fail
+  docker pull "${image_name}:${testing_image_tag}"
   docker tag "${image_name}:${testing_image_tag}" "${image_name}:${image_tag}"
   docker tag "${image_name}:${testing_image_tag}" "${image_name}:latest"
   if [[ "${dryrun}" != "true" ]];then

@@ -94,7 +94,7 @@ pipelines:
                     source: imagerc
                     destination: image/
                 - exec:
-                    # treat this as integration test and run in the just build
+                    # treat this as integration test and run in the just built
                     # releaser ide docker image
                     command: /bin/bash
                     arguments:

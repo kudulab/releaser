@@ -8,7 +8,7 @@ FROM alpine:3.5
 # * openssh is needed for "releaser release" command (to git push)
 RUN echo "http://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories && \
   apk add --no-cache bash shadow sudo git coreutils curl openssh && \
-  git clone --depth 1 -b 0.7.3 https://github.com/ai-traders/ide.git /tmp/ide_git && \
+  git clone --depth 1 -b 0.8.0 https://github.com/ai-traders/ide.git /tmp/ide_git && \
   /tmp/ide_git/ide_image_scripts/src/install.sh && \
   rm -r /tmp/ide_git && \
   echo 'ide ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers

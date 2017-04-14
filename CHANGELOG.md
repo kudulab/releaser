@@ -1,3 +1,11 @@
+### 0.1.3 (2017-Apr-14)
+
+* using ide >= 0.8.0 with options `--quiet --force_not_interactive` we can
+ use releaser to save any command output to a variable. E.g.:
+ ```
+ version=$(ide --quiet --force_not_interactive -- "releaser get_next_version")
+ ```
+
 ### 0.1.2 (2017-Apr-13)
 
 * install openssh in releaser ide docker image
