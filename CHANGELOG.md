@@ -1,3 +1,7 @@
+### 0.2.0 (2017-Apr-14)
+
+* \#10886 use releaser without ide docker image
+
 ### 0.1.3 (2017-Apr-14)
 
 * using ide >= 0.8.0 with options `--quiet --force_not_interactive` we can
