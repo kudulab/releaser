@@ -7,6 +7,27 @@ Bash scripts to release various projects.
 Releaser code consists of bash functions. There are functions to be
  treated as helpers and another functions to be treated as end user functions.
 
+### Install
+All the releaser functions are available after you run:
+```bash
+releaser_loaded || eval "$(curl http://gogs.ai-traders.com/platform/releaser/raw/0.2.0/src/releaser)"
+```
+You can put it in a script and it won't download releaser only 1st time the
+script it run.
+
+---
+
+Or the other way is:
+```bash
+wget http://gogs.ai-traders.com/platform/releaser/raw/0.2.0/src/releaser
+source releaser
+```
+
+---
+
+To validate that releaser functions are loaded use: `releaser_loaded` function
+or any other releaser function, e.g.: `get_next_version`.
+
 ### End user functions
 End user functions are used in `tasks` file.  End user should keep a local file: `tasks` with bash tasks (bash switch that
   allows running a limited amount of commands). We run those tasks for
@@ -26,7 +47,6 @@ End user functions understand end user variables which are put in `releaserrc` f
 Helpers functions allow each project type for custom release cycle. However, you should never reference helpers functions in `tasks` file,
  because helpers functions do not understand end user variables.
 
-Helpers functions can be run after you run: `source releaser`.
 
 ### Alpine
 If using releaser on Alpine, please run:

@@ -3,6 +3,11 @@ load '/opt/bats-assert/load.bash'
 
 releaser=$(readlink -f ./src/releaser)
 
+@test "releaser_loaded" {
+  run /bin/bash -c "source ${releaser} && releaser_loaded"
+  assert_equal "$status" 0
+}
+
 @test "get_last_version_from_changelog" {
   run /bin/bash -c "source ${releaser} && get_last_version_from_changelog \"test/unit/test-files/CHANGELOG-filled.md\""
   assert_output "20.13.41"

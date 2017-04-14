@@ -1,3 +1,8 @@
+### 0.2.1 (2017-Apr-14)
+
+* updated readme on how to install releaser
+* added releaser_loaded function to load releaser functions once
+
 ### 0.2.0 (2017-Apr-14)
 
 * \#10886 use releaser without ide docker image
