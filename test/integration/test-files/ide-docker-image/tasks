@@ -1,0 +1,31 @@
+#!/bin/bash
+
+# In production this will be in a local directory
+releaser=$(readlink -f ../../../../src/releaser)
+source ${releaser}
+releaser_init
+
+command="$1"
+case "${command}" in
+  bump)
+      bump_changelog_and_oversion "$2"
+      exit $?
+      ;;
+  bump_old)
+      ide_docker_image_bump_old "$2"
+      exit $?
+      ;;
+  verify_version)
+      verify_version_no_version_file
+      exit $?
+      ;;
+  release)
+      verify_version_no_version_file
+      git_tag_from_oversion
+      exit $?
+      ;;
+  *)
+      echo "Invalid command: '${command}'"
+      exit 1
+      ;;
+esac

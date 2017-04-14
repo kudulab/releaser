@@ -1,13 +1,15 @@
 pipelines:
-  docker-releaser:
+  releaser:
     group: platform
     label_template: "${git[:8]}"
     materials:
       git:
-        git: "git@git.ai-traders.com:platform/docker-releaser.git"
+        git: "git@git.ai-traders.com:platform/releaser.git"
         branch: master
+        blacklist:
+          - "**/*.md"
     stages:
-      - style_unit:
+      - test:
           clean_workspace: true
           jobs:
             validate_repo:
@@ -19,7 +21,7 @@ pipelines:
                     command: /bin/bash
                     arguments:
                       - -c
-                      - ./image/releaser verify_version
+                      - ./tasks verify_version
             unit:
               resources:
                 - docker
@@ -27,10 +29,9 @@ pipelines:
               tasks:
                 - exec:
                     command: bash
-                    # TODO: we need bats installed on go-agents id:10858
                     arguments:
                       - -c
-                      - sudo ./test/install-bats.sh && bats ./test/unit/*.bats
+                      - ./tasks unit
             itest:
               resources:
                 - docker
@@ -38,47 +39,9 @@ pipelines:
               tasks:
                 - exec:
                     command: bash
-                    # TODO: we need bats installed on go-agents id:10858
                     arguments:
                       - -c
-                      - sudo ./test/install-bats.sh && bats ./test/integration/*.bats
-      - build:
-          clean_workspace: true
-          jobs:
-            docker_image:
-              resources:
-                - docker
-                - small
-              artifacts:
-                - build:
-                    source: image/imagerc
-                    destination:
-              tasks:
-                - exec:
-                    command: /bin/bash
-                    arguments:
-                      - -c
-                      - ./image/releaser build
-      - itest:
-          clean_workspace: true
-          jobs:
-            end_user:
-              resources:
-                - docker
-                - small
-              tasks:
-                - fetch:
-                    stage: build
-                    job: docker_image
-                    is_file: yes
-                    source: imagerc
-                    destination: image/
-                - exec:
-                    command: bash
-                    # TODO: we need bats installed on go-agents id:10858
-                    arguments:
-                      - -c
-                      - sudo ./test/install-bats.sh && source image/imagerc && bats test/acceptance/*.bats
+                      - ./tasks itest
       - release:
           clean_workspace: true
           jobs:
@@ -87,29 +50,8 @@ pipelines:
                 - docker
                 - small
               tasks:
-                - fetch:
-                    stage: build
-                    job: docker_image
-                    is_file: yes
-                    source: imagerc
-                    destination: image/
-                - exec:
-                    # treat this as integration test and run in the just built
-                    # releaser ide docker image
-                    command: /bin/bash
-                    arguments:
-                      - -c
-                      - source image/imagerc && echo "IDE_DOCKER_IMAGE=${AIT_DOCKER_IMAGE_NAME}:${AIT_DOCKER_IMAGE_TAG}" > Idefile && ide releaser release
-      - publish:
-          clean_workspace: true
-          jobs:
-            docker_image:
-              resources:
-                - docker
-                - small
-              tasks:
                 - exec:
                     command: /bin/bash
                     arguments:
                       - -c
-                      - ./image/releaser publish
+                      - ./tasks release

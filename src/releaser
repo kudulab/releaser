@@ -1,18 +1,21 @@
 #!/bin/bash
 
+################################################################################
 # The functions here:
-#  * are independent of the main releaser file and of all the options set by an
+#  * are independent of the end user functions and all the variables set by an
 # end user.
-#  * does not assume any default arguments, all arguments must be explicitly set.
+#  * do not assume any default arguments, all variables must be explicitly set.
+#  * TODO: should those functions use end user variables?
 #  * should not be invoked directly by an end user.
 #  * are here to have higher test coverage.
 #  * are supposed to be reused in many places. If a function concerns only 1
 # project type, it should probably be in releaser main file. Unless keeping
 # the function here will help you test it.
+################################################################################
 
 set -e
 
-# Each log output goes to stderror, so that we can return value from functions
+# Each log output goes to stderrr, so that we can return value from functions
 # with stdout. (Curl does the same).
 
 log_debug() {
@@ -103,8 +106,12 @@ function parse_oversion_file {
   log_debug "Done parsing ${oversion_file}"
 }
 
-function get_next_version_from_oversion {
+function get_next_version {
   parse_oversion_file
+  exit_status="$?"
+  if [[ "${exit_status}" != 0 ]]; then
+    return "${exit_status}"
+  fi
   if [[ "${OVERSION_backend}" == "consul" ]]; then
     if [[ -z "${OVERSION_consul_url}" ]]; then
       log_error "OVERSION_consul_url not set, set consul_url in oversion file"
@@ -129,7 +136,7 @@ function get_next_version_from_oversion {
 }
 # Arguments:
 #  * next_version
-function set_next_version_into_oversion {
+function set_next_version {
   next_version="$1"
   if [[ -z "${next_version}" ]]; then
     log_error "next_version not set"
@@ -259,79 +266,82 @@ function locally_bump_version_in_changelog {
   fi
 }
 
-# Replaces the whole line in a docker image version file with that line and adds new version.
-# Arguments:
-#   new_version
-#   version_file
-function locally_bump_version_in_versionfile_dockerimage {
-  locally_bump_version_in_versionfile "export this_image_tag=" "$1" "$2"
+################################################################################
+# End user functions
+# The functions here:
+#  * use default values set in releaser_init function
+#  * use variables from releaserrc file
+################################################################################
+
+# You should invoke that function in any end user function.
+function releaser_init {
+  rls_changelog_file="$(pwd)/CHANGELOG.md"
+  source "./releaserrc"
+  log_info "Current directory: $(pwd)"
+  log_info "Changelog file: ${rls_changelog_file}"
+}
+
+# This function should be used in any project that does not use version file,
+# e.g. ide docker image.
+function verify_version_no_version_file {
+  # Test that the version was not already released.
+  version_from_changelog=$(get_last_version_from_changelog "${rls_changelog_file}")
+  if git tag | grep "${version_from_changelog}"; then
+    log_error "The last version from changelog was already git tagged: ${version_from_changelog}"
+    exit 1
+  fi
+  version_from_oversion=$(get_next_version)
+  if git tag | grep "${version_from_oversion}"; then
+    log_error "The last version from oversion was already git tagged: ${version_from_oversion}"
+    exit 1
+  fi
+  if [[ "${version_from_changelog}" != "${version_from_oversion}" ]]; then
+    log_error "version_from_changelog: ${version_from_changelog} != version_from_oversion: ${version_from_oversion}"
+    exit 1
+  fi
+  log_info "Version verified successfully"
+}
+
+function git_tag_from_oversion {
+  new_version="$(get_next_version)"
+  git tag "${new_version}" && git push origin "${new_version}"
+}
+function bump_changelog_and_oversion {
+  new_version="$1"
+  if [[ -z "${new_version}" ]];then
+    # get next_version from Consul, which was last released
+    old_version="$(get_next_version)"
+    new_version="$(bump_patch_version ${old_version})"
+  fi
+  log_debug "Validating new_version"
+  validate_version_is_semver "${new_version}"
+  log_info "New version will be: ${new_version}"
+  # set it locally
+  # NO: locally_bump_version_in_versionfile "export this_image_tag=" "${new_version}" "${version_file}"
+  locally_bump_version_in_changelog "${new_version}" "${rls_changelog_file}"
+  log_info "Bumped to ${new_version} in ${rls_changelog_file}"
+  # set it in Consul
+  set_next_version "${new_version}"
 }
 
 ################################################################################
+# Common for ide docker image project type
+################################################################################
 
-function docker_build {
-  image_dir="$1"
-  if [[ -z "${image_dir}" ]];then
-    log_error "image_dir not set"
-    return 1
+function ide_docker_image_bump_old {
+  new_version="$1"
+  if [[ -z "${new_version}" ]];then
+    # get next_version from Consul, which was last released
+    old_version="$(get_next_version)"
+    new_version="$(bump_patch_version ${old_version})"
   fi
-  image_name="$2"
-  if [[ -z "${image_name}" ]];then
-    log_error "image_name not set"
-    return 1
-  fi
-  image_tag="$3"
-  if [[ -z "${image_tag}" ]];then
-    # set to the latest git commit hash
-    image_tag=$(git rev-parse HEAD)
-  fi
-  set -x
-  initial_dir="$(pwd)"
-  cd "${image_dir}"
-  docker build -t "${image_name}:${image_tag}" .
-
-  echo "export AIT_DOCKER_IMAGE_NAME=\"${image_name}\"" > imagerc
-  echo "export AIT_DOCKER_IMAGE_TAG=\"${image_tag}\"" >> imagerc
-
-  echo "{ \"docker_image_name\":\"${image_name}\"," > imagerc.json
-  echo "\"docker_image_tag\":\"${image_tag}\"," >> imagerc.json
-  echo "\"docker_image_url\":\"${image_name}:${image_tag}\" }" >> imagerc.json
-
-  echo "---" > imagerc.yml
-  echo "docker_image_name: ${image_name}" >> imagerc.yml
-  echo "docker_image_tag:${image_tag}" >> imagerc.yml
-  echo "docker_image_url:${image_name}:${image_tag}" >> imagerc.yml
-
-  if [[ "${dryrun}" != "true" ]];then
-    docker push "${image_name}:${image_tag}"
-  fi
-  cd "${initial_dir}"
-  set +x
-}
-function docker_push {
-  image_name="$1"
-  if [[ -z "${image_name}" ]];then
-    log_error "image_name not set"
-    return 1
-  fi
-  log_info "image_name set to: ${image_name}"
-
-  image_tag="$2"
-  if [[ -z "${image_tag}" ]];then
-    # needs ide >= 0.8.0
-    image_tag=$(ide --idefile Idefile.to_be_tested --quiet --force_not_interactive -- "releaser get_next_version")
-    log_info "image_tag set to: ${image_tag}"
-  fi
-  testing_image_tag=$(git rev-parse HEAD)
-  log_info "testing_image_tag set to: ${testing_image_tag}"
-  set -x
-  # if docker image does not exist locally, then "docker tag" will fail
-  docker pull "${image_name}:${testing_image_tag}"
-  docker tag "${image_name}:${testing_image_tag}" "${image_name}:${image_tag}"
-  docker tag "${image_name}:${testing_image_tag}" "${image_name}:latest"
-  if [[ "${dryrun}" != "true" ]];then
-    docker push "${image_name}:${image_tag}"
-    docker push "${image_name}:latest"
-  fi
-  set +x
+  log_info "New version will be: ${new_version}"
+  log_debug "Validating new_version"
+  validate_version_is_semver "${new_version}"
+  # set it locally
+  locally_bump_version_in_versionfile "export this_image_tag=" "${new_version}" "${rls_version_file}"
+  locally_bump_version_in_changelog "${new_version}" "${rls_changelog_file}"
+  log_info "Bumped to ${new_version} in ${rls_version_file} and ${rls_changelog_file}"
+  # set it in Consul
+  set_next_version "${new_version}"
 }
