@@ -24,7 +24,7 @@ ide_docker_image_dir=$(readlink -f ${ide_docker_image_dir})
   /bin/bash -c "cd ${ide_docker_image_dir} && source ${releaser} && set_next_version 0.1.0"
   rm -rf "${ide_docker_image_dir}/.git"
   run /bin/bash -c "cd ${ide_docker_image_dir} && git init && git add --all && git commit -m first && ./tasks bump_old"
-  assert_output --partial "Got next_version from Consul: 0.1.0"
+  assert_output --partial "Got next_version from Consul for docker-releaser-test: 0.1.0"
   assert_output --partial "New version will be: 0.1.1"
   assert_output --partial "Bumped to 0.1.1"
   assert_output --partial "Set next_version into Consul: 0.1.1"

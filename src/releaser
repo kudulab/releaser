@@ -137,7 +137,7 @@ function get_next_version {
       log_error "Could not get next_version from Consul. Is it set? Is curl installed?"
       return 1
     fi
-    log_info "Got next_version from Consul: ${next_version}"
+    log_info "Got next_version from Consul for ${OVERSION_project_name}: ${next_version}"
   else
     log_error "Not supported backend: ${OVERSION_backend}"
     return 1
@@ -283,10 +283,15 @@ function locally_bump_version_in_changelog {
 #  * use variables from releaserrc file
 ################################################################################
 
-# You should invoke that function in any end user function.
+# You should invoke that function before running any end user functions.
 function releaser_init {
   rls_changelog_file="$(pwd)/CHANGELOG.md"
-  source "./releaserrc"
+  variables_file="$(pwd)/releaserrc"
+  if [[ -f "${variables_file}" ]]; then
+    source "${variables_file}"
+  else
+    log_warn "File: ${variables_file} does not exist, but it is ok."
+  fi
   log_info "Current directory: $(pwd)"
   log_info "Changelog file: ${rls_changelog_file}"
 }

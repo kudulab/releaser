@@ -1,3 +1,7 @@
+
+* get_next_version informs about project name
+* the variables file: `releaserrc` is not obligatory
+
 ### 0.2.1 (2017-Apr-14)
 
 * updated readme on how to install releaser
