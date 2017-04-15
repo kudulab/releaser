@@ -1,3 +1,5 @@
+### 0.3.0 (2017-Apr-15)
+
 * \#10891 add publish_to_archive function and publish releaser to archive
 * get_next_version informs about project name
 * the variables file: `releaserrc` is not obligatory

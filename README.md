@@ -8,18 +8,18 @@ Releaser code consists of bash functions. There are functions to be
  treated as helpers and another functions to be treated as end user functions.
 
 ### Install
-All the releaser functions are available after you run:
+All the releaser functions are available after you install it.
+If you want to run releaser in current shell:
 ```bash
-releaser_loaded || eval "$(curl http://gogs.ai-traders.com/platform/releaser/raw/0.2.0/src/releaser)"
+releaser_loaded || eval "$(curl http://archive.ai-traders.com/releaser/0.3.0/releaser)"
 ```
-You can put it in a script and it won't download releaser only 1st time the
-script it run.
+ Do not use it in a script as it would always redownload the file.
 
----
-
-Or the other way is:
+If you want to run releaser from a script:
 ```bash
-wget http://gogs.ai-traders.com/platform/releaser/raw/0.2.0/src/releaser
+if [[ ! -f ./releaser ]];then
+  wget http://archive.ai-traders.com/releaser/0.3.0/releaser || { echo "failed to wget releaser"; exit 1; }
+fi
 source releaser
 ```
 
@@ -42,6 +42,8 @@ Thanks to `tasks` file it is easy to remember which commands to run and we
   * ide docker image [tasks](./test/integration/test-files/ide-docker-image/tasks)
 
 End user functions understand end user variables which are put in `releaserrc` file.
+TODO: maybe end user functions should take arguments just like any other
+ functions just to be explicit.
 
 ### Helpers functions
 Helpers functions allow each project type for custom release cycle. However, you should never reference helpers functions in `tasks` file,
