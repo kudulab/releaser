@@ -29,3 +29,22 @@ ide_docker_image_dir=$(readlink -f ${ide_docker_image_dir})
   assert_equal "$status" 0
   /bin/bash -c "cd ${ide_docker_image_dir} && source ${releaser} && set_next_version \"0.1.0\""
 }
+
+@test "publish_to_archive succeeds if all set" {
+  run /bin/bash -c "source ${releaser} && RELEASER_LOG_LEVEL=debug publish_to_archive \"releaser-test\" \"0.1.123\" \"test/integration/test-files/file-to-publish\""
+  assert_output --partial "Published into rsync://rsync.archive.ai-traders.com/archive/releaser-test/0.1.123"
+  assert_equal "$status" 0
+
+  run wget -O downloaded-file http://http.archive.ai-traders.com/releaser-test/0.1.123/file-to-publish
+  assert_equal "$status" 0
+
+  run cat downloaded-file
+  assert_output "123"
+  assert_equal "$status" 0
+
+  # remove the contents of http://http.archive.ai-traders.com/releaser-test/
+  mkdir -p /tmp/aa
+  rsync --recursive --delete /tmp/aa/ rsync://rsync.archive.ai-traders.com/archive/releaser-test/
+  rm -r /tmp/aa
+  rm downloaded-file
+}

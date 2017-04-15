@@ -28,6 +28,12 @@ case "${command}" in
       git_tag_from_oversion
       exit $?
       ;;
+  publish)
+      # publish the just released version
+      version=$(get_last_git_tagged_version)
+      publish_to_archive "releaser" "${version}" "src/releaser"
+      exit $?
+      ;;
   *)
       echo "Invalid command: '${command}'"
       exit 1

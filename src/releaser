@@ -276,6 +276,40 @@ function locally_bump_version_in_changelog {
   fi
 }
 
+function publish_to_archive {
+  endpoint_directory_name="$1"
+  version="$2"
+  file_to_publish="$3"
+
+  if [[ -z "${endpoint_directory_name}" ]];then
+    log_error "endpoint_directory_name not set"
+    return 1
+  fi
+  if [[ -z "${version}" ]];then
+    log_error "version not set"
+    return 1
+  fi
+  if [[ -z "${file_to_publish}" ]];then
+    log_error "file_to_publish not set"
+    return 1
+  fi
+  if [[ ! -f "${file_to_publish}" ]];then
+    log_error "${file_to_publish} does not exist"
+    return 1
+  fi
+
+  initial_dir="$(pwd)"
+  mkdir -p "/tmp/releaser-${endpoint_directory_name}/${version}"
+  cp -r "${file_to_publish}" "/tmp/releaser-${endpoint_directory_name}/${version}"
+  cd "/tmp/releaser-${endpoint_directory_name}"
+  if [[ "${dryrun}" != "true" ]];then
+    rsync -avrR "./${version}"  "rsync://rsync.archive.ai-traders.com/archive/${endpoint_directory_name}"
+  fi
+  log_info "Published into rsync://rsync.archive.ai-traders.com/archive/${endpoint_directory_name}/${version}"
+  cd "${initial_dir}"
+  rm -r "/tmp/releaser-${endpoint_directory_name}"
+}
+
 ################################################################################
 # End user functions
 # The functions here:

@@ -1,4 +1,4 @@
-
+* \#10891 add publish_to_archive function and publish releaser to archive
 * get_next_version informs about project name
 * the variables file: `releaserrc` is not obligatory
 * rls_changelog_file renamed to changelog_file

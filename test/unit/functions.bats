@@ -78,3 +78,27 @@ releaser=$(readlink -f ./src/releaser)
   assert_output --partial "### 129.11.12412 (20"
   assert_equal "$status" 0
 }
+
+@test "publish_to_archive fails if endpoint_directory_name not set" {
+  run /bin/bash -c "source ${releaser} && RELEASER_LOG_LEVEL=debug dryrun=true publish_to_archive"
+  assert_output --partial "endpoint_directory_name not set"
+  assert_equal "$status" 1
+}
+
+@test "publish_to_archive fails if version not set" {
+  run /bin/bash -c "source ${releaser} && RELEASER_LOG_LEVEL=debug dryrun=true publish_to_archive \"my_endpoint_name\""
+  assert_output --partial "version not set"
+  assert_equal "$status" 1
+}
+
+@test "publish_to_archive fails if file_to_publish not set" {
+  run /bin/bash -c "source ${releaser} && RELEASER_LOG_LEVEL=debug dryrun=true publish_to_archive \"my_endpoint_name\" \"0.1.123\""
+  assert_output --partial "file_to_publish not set"
+  assert_equal "$status" 1
+}
+
+@test "publish_to_archive succeeds if all set" {
+  run /bin/bash -c "source ${releaser} && RELEASER_LOG_LEVEL=debug dryrun=true publish_to_archive \"my_endpoint_name\" \"0.1.123\" \"CHANGELOG.md\""
+  assert_output --partial "Published into rsync://rsync.archive.ai-traders.com/archive/my_endpoint_name/0.1.123"
+  assert_equal "$status" 0
+}
