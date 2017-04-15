@@ -1,6 +1,8 @@
 
 * get_next_version informs about project name
 * the variables file: `releaserrc` is not obligatory
+* rls_changelog_file renamed to changelog_file
+* rls_version_file renamed to version_file
 
 ### 0.2.1 (2017-Apr-14)
 

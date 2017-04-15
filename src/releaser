@@ -22,7 +22,7 @@ program_name() {
   echo "RELEASER"
 }
 log_debug() {
-  if [ "$RELEASER_LOG_LEVEL" == "debug" ]; then
+  if [ "${RELEASER_LOG_LEVEL}" == "debug" ]; then
     echo -e "$(date "+%d-%m-%Y %T") $(program_name) debug: ${1}" >&2
   fi
 }
@@ -285,7 +285,7 @@ function locally_bump_version_in_changelog {
 
 # You should invoke that function before running any end user functions.
 function releaser_init {
-  rls_changelog_file="$(pwd)/CHANGELOG.md"
+  changelog_file="$(pwd)/CHANGELOG.md"
   variables_file="$(pwd)/releaserrc"
   if [[ -f "${variables_file}" ]]; then
     source "${variables_file}"
@@ -293,14 +293,14 @@ function releaser_init {
     log_warn "File: ${variables_file} does not exist, but it is ok."
   fi
   log_info "Current directory: $(pwd)"
-  log_info "Changelog file: ${rls_changelog_file}"
+  log_info "Changelog file: ${changelog_file}"
 }
 
 # This function should be used in any project that does not use version file,
 # e.g. ide docker image.
 function verify_version_no_version_file {
   # Test that the version was not already released.
-  version_from_changelog=$(get_last_version_from_changelog "${rls_changelog_file}")
+  version_from_changelog=$(get_last_version_from_changelog "${changelog_file}")
   if git tag | grep "${version_from_changelog}"; then
     log_error "The last version from changelog was already git tagged: ${version_from_changelog}"
     exit 1
@@ -333,8 +333,8 @@ function bump_changelog_and_oversion {
   log_info "New version will be: ${new_version}"
   # set it locally
   # NO: locally_bump_version_in_versionfile "export this_image_tag=" "${new_version}" "${version_file}"
-  locally_bump_version_in_changelog "${new_version}" "${rls_changelog_file}"
-  log_info "Bumped to ${new_version} in ${rls_changelog_file}"
+  locally_bump_version_in_changelog "${new_version}" "${changelog_file}"
+  log_info "Bumped to ${new_version} in ${changelog_file}"
   # set it in Consul
   set_next_version "${new_version}"
 }
@@ -354,9 +354,9 @@ function ide_docker_image_bump_old {
   log_debug "Validating new_version"
   validate_version_is_semver "${new_version}"
   # set it locally
-  locally_bump_version_in_versionfile "export this_image_tag=" "${new_version}" "${rls_version_file}"
-  locally_bump_version_in_changelog "${new_version}" "${rls_changelog_file}"
-  log_info "Bumped to ${new_version} in ${rls_version_file} and ${rls_changelog_file}"
+  locally_bump_version_in_versionfile "export this_image_tag=" "${new_version}" "${version_file}"
+  locally_bump_version_in_changelog "${new_version}" "${changelog_file}"
+  log_info "Bumped to ${new_version} in ${version_file} and ${changelog_file}"
   # set it in Consul
   set_next_version "${new_version}"
 }

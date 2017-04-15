@@ -1,2 +1,2 @@
 # This is needed only for bump_old, when ide docker images needed version file
-rls_version_file="image/etc_ide.d/variables/60-variables.sh"
+version_file="image/etc_ide.d/variables/60-variables.sh"
