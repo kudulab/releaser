@@ -5,6 +5,7 @@ releaser=$(readlink -f src/releaser)
 source ${releaser}
 releaser_init
 
+set -e
 command="$1"
 case "${command}" in
   bump)
@@ -39,3 +40,4 @@ case "${command}" in
       exit 1
       ;;
 esac
+set +e

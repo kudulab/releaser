@@ -1,22 +1,19 @@
 #!/bin/bash
 
 ################################################################################
-# The functions here:
-#  * are independent of the end user functions and all the variables set by an
-# end user.
-#  * do not assume any default arguments, all variables must be explicitly set.
-#  * TODO: should those functions use end user variables?
-#  * should not be invoked directly by an end user.
-#  * are here to have higher test coverage.
-#  * are supposed to be reused in many places. If a function concerns only 1
-# project type, it should probably be in releaser main file. Unless keeping
-# the function here will help you test it.
-################################################################################
-
-set -e
-
-# Each log output goes to stderrr, so that we can return value from functions
+# Generally:
+# * Each log output goes to stderrr, so that we can return value from functions
 # with stdout. (Curl does the same).
+# * Do not set here: `set -e`, because after this script is sourced, then
+# using it interactively would be troublesome: exit on each failure and
+# bash completion results in exit too.
+################################################################################
+# The Helpers functions:
+#  * are independent of the end user functions and all the variables sourced
+# from releaserrc
+#  * do not assume any default arguments, all variables must be explicitly set.
+#  * are here to have higher test coverage.
+################################################################################
 
 program_name() {
   echo "RELEASER"
@@ -186,6 +183,10 @@ function bump_patch_version {
   fi
   log_debug "Validating old_version"
   validate_version_is_semver "${old_version}"
+  exit_status="$?"
+  if [[ "${exit_status}" != 0 ]]; then
+    return "${exit_status}"
+  fi
 
   #replace . with space so can split into an array
   version_bits=(${old_version//./\ })
@@ -311,8 +312,7 @@ function publish_to_archive {
 }
 
 ################################################################################
-# End user functions
-# The functions here:
+# The End user functions here:
 #  * use default values set in releaser_init function
 #  * use variables from releaserrc file
 ################################################################################
@@ -355,6 +355,14 @@ function git_tag_from_oversion {
   new_version="$(get_next_version)"
   git tag "${new_version}" && git push origin "${new_version}"
 }
+# This function:
+#  * bumps version in changelog: it adds a newline and a line with date
+# and version number as the first lines in changelog
+#  * bumps version in OVersion backend
+# You should first fill out changelog with code history and then use this
+# function.
+# Arguments:
+#  * new version - optional, if not set, then patch version will be bumped by 1
 function bump_changelog_and_oversion {
   new_version="$1"
   if [[ -z "${new_version}" ]];then

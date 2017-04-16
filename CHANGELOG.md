@@ -1,3 +1,8 @@
+### 0.3.1 (2017-Apr-16)
+
+* do not set `set -e` in releaser main file
+* better readme
+
 ### 0.3.0 (2017-Apr-15)
 
 * \#10891 add publish_to_archive function and publish releaser to archive
