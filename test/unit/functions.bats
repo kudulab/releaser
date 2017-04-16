@@ -63,18 +63,18 @@ releaser=$(readlink -f ./src/releaser)
 }
 
 @test "locally_bump_version_in_versionfile when some string instead of version" {
-  run /bin/bash -c "source ${releaser} && RELEASER_LOG_LEVEL=debug dryrun=true locally_bump_version_in_versionfile \"export this_image_tag=\"  \"129.11.12412\" \"test/unit/test-files/docker-image-version-file\""
+  run /bin/bash -c "source ${releaser} && RELEASER_LOG_LEVEL=debug dryrun=true locally_bump_version_in_versionfile \"export this_image_tag=\" \"test/unit/test-files/docker-image-version-file\"  \"129.11.12412\""
   assert_output --partial "export this_image_tag=\"129.11.12412\""
   assert_equal "$status" 0
 }
 @test "locally_bump_version_in_versionfile when old version was set" {
-  run /bin/bash -c "source ${releaser} && RELEASER_LOG_LEVEL=debug dryrun=true locally_bump_version_in_versionfile \"export this_image_tag=\"  \"129.11.12412\" \"test/unit/test-files/docker-image-version-file1\""
+  run /bin/bash -c "source ${releaser} && RELEASER_LOG_LEVEL=debug dryrun=true locally_bump_version_in_versionfile \"export this_image_tag=\" \"test/unit/test-files/docker-image-version-file1\"  \"129.11.12412\""
   assert_output --partial "export this_image_tag=\"129.11.12412\""
   assert_equal "$status" 0
 }
 
 @test "locally_bump_version_in_changelog" {
-  run /bin/bash -c "source ${releaser} && RELEASER_LOG_LEVEL=debug dryrun=true locally_bump_version_in_changelog \"129.11.12412\" \"test/unit/test-files/CHANGELOG.md\""
+  run /bin/bash -c "source ${releaser} && RELEASER_LOG_LEVEL=debug dryrun=true locally_bump_version_in_changelog  \"test/unit/test-files/CHANGELOG.md\" \"129.11.12412\""
   assert_output --partial "### 129.11.12412 (20"
   assert_equal "$status" 0
 }

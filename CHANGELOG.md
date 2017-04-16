@@ -1,3 +1,8 @@
+### 0.3.2 (2017-Apr-16)
+
+* changed arguments order in locally_bump_version_in_versionfile and
+ locally_bump_version_in_changelog functions
+
 ### 0.3.1 (2017-Apr-16)
 
 * do not set `set -e` in releaser main file

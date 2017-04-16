@@ -17,7 +17,7 @@ releaser_loaded || eval "$(curl http://archive.ai-traders.com/releaser/0.3.0/rel
 If you want to run releaser from a script:
 ```bash
 if [[ ! -f ./releaser ]];then
-  wget http://archive.ai-traders.com/releaser/0.3.0/releaser || { echo "failed to wget releaser"; exit 1; }
+  wget http://archive.ai-traders.com/releaser/0.3.0/releaser
 fi
 source releaser
 ```
@@ -48,13 +48,13 @@ Recommended usage for a project:
 ```bash
 #!/bin/bash
 
+set -e
 if [[ ! -f ./releaser ]];then
-  wget http://archive.ai-traders.com/releaser/0.3.0/releaser || { echo "failed to wget releaser"; exit 1; }
+  wget http://archive.ai-traders.com/releaser/0.3.0/releaser
 fi
 source releaser
 releaser_init
 
-set -e
 command="$1"
 case "${command}" in
   bump)

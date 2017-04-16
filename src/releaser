@@ -218,16 +218,17 @@ function validate_version_is_semver {
 #   version_file
 function locally_bump_version_in_versionfile {
   line_pattern="$1"
+  version_file="$2"
+  new_version="$3"
+
   if [[ -z "${line_pattern}" ]];then
     log_error "line_pattern not set"
     return 1
   fi
-  new_version="$2"
   if [[ -z "${new_version}" ]];then
     log_error "new_version not set"
     return 1
   fi
-  version_file="$3"
   if [[ -z "${version_file}" ]];then
     log_error "version_file not set"
     return 1
@@ -249,8 +250,9 @@ function locally_bump_version_in_versionfile {
 #   new_version
 #   changelog_file
 function locally_bump_version_in_changelog {
-  new_version="$1"
-  changelog_file="$2"
+  changelog_file="$1"
+  new_version="$2"
+
   if [[ -z "${new_version}" ]];then
     log_error "new_version not set"
     return 1
@@ -374,8 +376,8 @@ function bump_changelog_and_oversion {
   validate_version_is_semver "${new_version}"
   log_info "New version will be: ${new_version}"
   # set it locally
-  # NO: locally_bump_version_in_versionfile "export this_image_tag=" "${new_version}" "${version_file}"
-  locally_bump_version_in_changelog "${new_version}" "${changelog_file}"
+  # NO: locally_bump_version_in_versionfile "export this_image_tag=" "${version_file}" "${new_version}"
+  locally_bump_version_in_changelog "${changelog_file}" "${new_version}"
   log_info "Bumped to ${new_version} in ${changelog_file}"
   # set it in Consul
   set_next_version "${new_version}"
@@ -396,8 +398,8 @@ function ide_docker_image_bump_old {
   log_debug "Validating new_version"
   validate_version_is_semver "${new_version}"
   # set it locally
-  locally_bump_version_in_versionfile "export this_image_tag=" "${new_version}" "${version_file}"
-  locally_bump_version_in_changelog "${new_version}" "${changelog_file}"
+  locally_bump_version_in_versionfile "export this_image_tag=" "${version_file}" "${new_version}"
+  locally_bump_version_in_changelog "${changelog_file}" "${new_version}"
   log_info "Bumped to ${new_version} in ${version_file} and ${changelog_file}"
   # set it in Consul
   set_next_version "${new_version}"
