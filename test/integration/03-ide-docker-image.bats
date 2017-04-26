@@ -6,6 +6,7 @@ ide_docker_image_dir="test/integration/test-files/ide-docker-image"
 ide_docker_image_dir=$(readlink -f ${ide_docker_image_dir})
 
 @test "not-existent-command" {
+  rm -rf "${ide_docker_image_dir}/.git"
   run /bin/bash -c "cd ${ide_docker_image_dir} && source ${releaser} && RELEASER_LOG_LEVEL=debug ./tasks not-existent-command"
   assert_output --partial "Invalid command: 'not-existent-command'"
   assert_equal "$status" 1

@@ -375,8 +375,6 @@ function bump_changelog_and_oversion {
   log_debug "Validating new_version"
   validate_version_is_semver "${new_version}"
   log_info "New version will be: ${new_version}"
-  # set it locally
-  # NO: locally_bump_version_in_versionfile "export this_image_tag=" "${version_file}" "${new_version}"
   locally_bump_version_in_changelog "${changelog_file}" "${new_version}"
   log_info "Bumped to ${new_version} in ${changelog_file}"
   # set it in Consul
@@ -403,4 +401,54 @@ function ide_docker_image_bump_old {
   log_info "Bumped to ${new_version} in ${version_file} and ${changelog_file}"
   # set it in Consul
   set_next_version "${new_version}"
+}
+
+################################################################################
+# Common for ide k8s chart project type
+################################################################################
+
+function get_chart_version {
+  version_file="$1"
+  if [[ -z "${version_file}" ]];then
+    log_error "version_file not set"
+    return 1
+  fi
+
+  cat "${version_file}" | grep "version" | grep -o -e "[0-9]*\.[0-9]*\.[0-9]*"
+}
+function bump_chart_version {
+  version_file="$1"
+  new_version="$2"
+  if [[ -z "${new_version}" ]];then
+    # get next_version from Consul, which was last released
+    old_version="$(get_next_version)"
+    new_version="$(bump_patch_version ${old_version})"
+  fi
+
+  locally_bump_version_in_versionfile "version: " "${version_file}" "${new_version}"
+  log_info "Bumped to ${new_version} in ${version_file}"
+}
+function verify_version_not_released_chart {
+  version_file="$1"
+  if [[ -z "${version_file}" ]];then
+    log_error "version_file not set"
+    return 1
+  fi
+
+  chart_version="$(get_chart_version ${version_file})"
+  if [[ $(git tag | grep "${chart_version}" -c) -ne 0 ]]; then
+    echo "git tag: ${chart_version} exists already, please bump version in "\
+    "${version_file}"
+    exit 1
+  fi
+  changelog_version=$(get_last_version_from_changelog "${changelog_file}")
+  if [[ $(git tag | grep "${changelog_version}" -c) -ne 0 ]]; then
+    echo "git tag: ${changelog_version} exists already, please bump version in "\
+    "changelog file"
+    exit 1
+  fi
+  if [[ "${chart_version}" != "${changelog_version}" ]];then
+    echo "chart_version: ${chart_version} != changelog_version: ${changelog_version}"
+    exit 1
+  fi
 }

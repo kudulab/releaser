@@ -1,3 +1,4 @@
+* add functions to release k8s chart
 * logs from set_next_version function now say project name
 
 ### 0.3.2 (2017-Apr-16)

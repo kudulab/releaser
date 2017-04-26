@@ -102,3 +102,20 @@ releaser=$(readlink -f ./src/releaser)
   assert_output --partial "Published into rsync://rsync.archive.ai-traders.com/archive/my_endpoint_name/0.1.123"
   assert_equal "$status" 0
 }
+
+@test "get_chart_version, version quoted" {
+  run /bin/bash -c "source ${releaser} && RELEASER_LOG_LEVEL=debug get_chart_version \"test/unit/test-files/Chart.yaml\""
+  assert_output "12.45.10"
+  assert_equal "$status" 0
+}
+@test "get_chart_version, version not quoted" {
+  run /bin/bash -c "source ${releaser} && RELEASER_LOG_LEVEL=debug get_chart_version \"test/unit/test-files/Chart1.yaml\""
+  assert_output "12.45.11"
+  assert_equal "$status" 0
+}
+
+@test "bump_chart_version when some string instead of version" {
+  run /bin/bash -c "source ${releaser} && RELEASER_LOG_LEVEL=debug dryrun=true bump_chart_version \"test/unit/test-files/Chart.yaml\"  \"129.11.12412\""
+  assert_output --partial "version: \"129.11.12412\""
+  assert_equal "$status" 0
+}

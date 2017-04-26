@@ -1,0 +1,19 @@
+#!/bin/bash
+
+set -e
+releaser=$(readlink -f ../../../../src/releaser)
+source ${releaser}
+releaser_init
+
+command="$1"
+case "${command}" in
+  bump)
+      bump_chart_version "$2"
+      exit $?
+      ;;
+  *)
+      echo "Invalid command: '${command}'"
+      exit 1
+      ;;
+esac
+set +e
