@@ -131,7 +131,7 @@ function get_next_version {
     full_url="${OVERSION_consul_url}/v1/kv/projects/${OVERSION_project_name}/next_version?raw"
     next_version=$(curl -X GET --silent ${full_url})
     if [[ "${next_version}" == "" ]]; then
-      log_error "Could not get next_version from Consul. Is it set? Is curl installed?"
+      log_error "Could not get next_version from Consul for ${OVERSION_project_name}. Is it set? Is curl installed?"
       return 1
     fi
     log_info "Got next_version from Consul for ${OVERSION_project_name}: ${next_version}"
@@ -160,10 +160,10 @@ function set_next_version {
       return 1
     fi
     full_url="${OVERSION_consul_url}/v1/kv/projects/${OVERSION_project_name}/next_version"
-    log_info "Set next_version into Consul: ${next_version}"
+    log_info "Set next_version into Consul for ${OVERSION_project_name}: ${next_version}"
     output=$(curl -X PUT --silent --data ${next_version} ${full_url})
     if [[ "${output}" != "true" ]]; then
-      log_error "Could not set next_version into Consul."
+      log_error "Could not set next_version into Consul for ${OVERSION_project_name}."
       return 1
     fi
   else

@@ -25,7 +25,7 @@ ide_docker_image_dir=$(readlink -f ${ide_docker_image_dir})
 
 @test "set_next_version" {
   run /bin/bash -c "cd ${ide_docker_image_dir} && source ${releaser} && set_next_version \"41.111.3\""
-  assert_output --partial "Set next_version into Consul: 41.111.3"
+  assert_output --partial "Set next_version into Consul for docker-releaser-test: 41.111.3"
   assert_equal "$status" 0
   /bin/bash -c "cd ${ide_docker_image_dir} && source ${releaser} && set_next_version \"0.1.0\""
 }

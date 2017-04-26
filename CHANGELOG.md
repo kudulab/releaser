@@ -1,3 +1,5 @@
+* logs from set_next_version function now say project name
+
 ### 0.3.2 (2017-Apr-16)
 
 * changed arguments order in locally_bump_version_in_versionfile and

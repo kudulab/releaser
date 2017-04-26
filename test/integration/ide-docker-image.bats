@@ -21,13 +21,12 @@ ide_docker_image_dir=$(readlink -f ${ide_docker_image_dir})
   rm -rf "${ide_docker_image_dir}123"
 }
 @test "bump succeeds if new version not set and we can get version from OVersion backend" {
-  /bin/bash -c "cd ${ide_docker_image_dir} && source ${releaser} && set_next_version 0.1.0"
   rm -rf "${ide_docker_image_dir}/.git"
   run /bin/bash -c "cd ${ide_docker_image_dir} && git init && git add --all && git commit -m first && ./tasks bump_old"
   assert_output --partial "Got next_version from Consul for docker-releaser-test: 0.1.0"
   assert_output --partial "New version will be: 0.1.1"
   assert_output --partial "Bumped to 0.1.1"
-  assert_output --partial "Set next_version into Consul: 0.1.1"
+  assert_output --partial "Set next_version into Consul for docker-releaser-test: 0.1.1"
   assert_equal "$status" 0
 
   run /bin/bash -c "cat ${ide_docker_image_dir}/image/etc_ide.d/variables/60-variables.sh | grep \"0.1.1\""
@@ -45,7 +44,7 @@ ide_docker_image_dir=$(readlink -f ${ide_docker_image_dir})
   run /bin/bash -c "cd ${ide_docker_image_dir} && git init && git add --all && git commit -m first && ./tasks bump_old 0.0.13"
   assert_output --partial "New version will be: 0.0.13"
   assert_output --partial "Bumped to 0.0.13"
-  assert_output --partial "Set next_version into Consul: 0.0.13"
+  assert_output --partial "Set next_version into Consul for docker-releaser-test: 0.0.13"
   assert_equal "$status" 0
 
   run /bin/bash -c "cat ${ide_docker_image_dir}/image/etc_ide.d/variables/60-variables.sh | grep \"0.0.13\""
