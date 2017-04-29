@@ -45,6 +45,7 @@ Recommended usage for a project:
 1. Provide `./releaserrc` file to set variables (this is optional).
 1. Provide `./tasks` file with bash `case` (switch). It will allow to run
  a limited amount of commands). Example:
+
 ```bash
 #!/bin/bash
 
@@ -76,6 +77,7 @@ case "${command}" in
 esac
 set +e
 ```
+
 Now you can use it:
 * `./tasks bump`
 * `./tasks verify_version`
