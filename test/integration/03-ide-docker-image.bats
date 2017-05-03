@@ -38,7 +38,7 @@ ide_docker_image_dir=$(readlink -f ${ide_docker_image_dir})
   # cleanup
   cd ${ide_docker_image_dir} && git reset --hard
   rm -rf "${ide_docker_image_dir}/.git"
-  /bin/bash -c "cd ${ide_docker_image_dir} && source ${releaser} && set_next_version 0.1.0"
+  /bin/bash -c "cd ${ide_docker_image_dir} && source ${releaser} && set_next_oversion 0.1.0"
 }
 @test "bump succeeds if new version set" {
   rm -rf "${ide_docker_image_dir}/.git"
@@ -56,7 +56,7 @@ ide_docker_image_dir=$(readlink -f ${ide_docker_image_dir})
   # cleanup
   cd ${ide_docker_image_dir} && git reset --hard
   rm -rf "${ide_docker_image_dir}/.git"
-  run /bin/bash -c "cd ${ide_docker_image_dir} && source ${releaser} && set_next_version 0.1.0"
+  run /bin/bash -c "cd ${ide_docker_image_dir} && source ${releaser} && set_next_oversion 0.1.0"
 }
 
 @test "verify_version returns 1 if there is git tag for next_version from oversion" {
@@ -80,7 +80,7 @@ ide_docker_image_dir=$(readlink -f ${ide_docker_image_dir})
 @test "verify_version returns 0 if there is no git tag for last changelog version and next_version from oversion" {
   # we pretend that 0.1.0 was already released and next version is 0.1.1 (not released)
 
-  run /bin/bash -c "cd ${ide_docker_image_dir} && source ${releaser} && set_next_version \"0.1.1\""
+  run /bin/bash -c "cd ${ide_docker_image_dir} && source ${releaser} && set_next_oversion \"0.1.1\""
   rm -rf "${ide_docker_image_dir}/.git"
   run /bin/bash -c "cd ${ide_docker_image_dir} && git init && git add --all && git commit -m first && git tag 0.1.0 && ./tasks verify_version"
   assert_output --partial "Version verified successfully"
@@ -88,5 +88,5 @@ ide_docker_image_dir=$(readlink -f ${ide_docker_image_dir})
 
   # cleanup
   rm -rf "${ide_docker_image_dir}/.git"
-  /bin/bash -c "cd ${ide_docker_image_dir} && source ${releaser} && set_next_version \"0.1.0\""
+  /bin/bash -c "cd ${ide_docker_image_dir} && source ${releaser} && set_next_oversion \"0.1.0\""
 }

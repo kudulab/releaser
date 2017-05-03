@@ -1,3 +1,10 @@
+* \#11010 renamed functions:
+   * locally_bump_version_in_changelog to set_version_in_changelog
+   * locally_bump_version_in_versionfile to set_version_in_file
+   * get_next_version to get_next_oversion
+   * set_next_version to set_next_oversion
+   * verify_version_no_version_file to verify_version_for_release
+
 ### 0.4.0 (2017-Apr-26)
 
 * add functions to release k8s chart

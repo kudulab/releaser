@@ -8,6 +8,6 @@ ide_docker_image_dir=$(readlink -f ${ide_docker_image_dir})
 @test "init" {
   # just run it before all tests
   rm -rf "${ide_docker_image_dir}/.git"
-  run /bin/bash -c "cd ${ide_docker_image_dir} && source ${releaser} && set_next_version 0.1.0"
+  run /bin/bash -c "cd ${ide_docker_image_dir} && source ${releaser} && set_next_oversion 0.1.0"
   assert_equal "$status" 0
 }
