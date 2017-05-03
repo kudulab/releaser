@@ -265,18 +265,25 @@ function set_version_in_changelog {
     log_error "${changelog_file} does not exist"
     return 1
   fi
-  release_date=$(date +%Y-%b-%d)
-  new_line="### ${new_version} (${release_date})"
-  log_debug "Will add new line to changelog:"
-  log_debug "${new_line}"
-  if [[ "${dryrun}" != "true" ]];then
-    old_changelog=$(cat "${changelog_file}")
-    echo "${new_line}" > "${changelog_file}"
-    echo "" >> "${changelog_file}"
-    echo "${old_changelog}" >> "${changelog_file}"
-    # this does not work, newline is not printed, eve with echo -e
-    new_changelog="${new_line}\n${old_changelog}"
-  fi
+
+  # make this function idempotent
+  changelog_first_line=$(head -1 ${changelog_file})
+  if [[ "${changelog_first_line}" == "### ${new_version} "* ]];then
+    log_debug "Version in changelog is already set"
+  else
+    release_date=$(date +%Y-%b-%d)
+    new_line="### ${new_version} (${release_date})"
+    log_debug "Will add new line to changelog:"
+    log_debug "${new_line}"
+    if [[ "${dryrun}" != "true" ]];then
+      old_changelog=$(cat "${changelog_file}")
+      echo "${new_line}" > "${changelog_file}"
+      echo "" >> "${changelog_file}"
+      echo "${old_changelog}" >> "${changelog_file}"
+      # this does not work, newline is not printed, even with echo -e
+      new_changelog="${new_line}\n${old_changelog}"
+    fi
+  fi  
 }
 
 function publish_to_archive {
