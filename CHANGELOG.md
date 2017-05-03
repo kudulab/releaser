@@ -7,6 +7,7 @@
    * set_next_version to set_next_oversion
    * verify_version_no_version_file to verify_version_for_release
 * \#11008 set_version_in_changelog is now idempotent
+* \#11008 set_version_in_changelog supports if "Unreleased" is in the first line
 
 ### 0.4.0 (2017-Apr-26)
 

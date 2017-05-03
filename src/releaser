@@ -245,7 +245,26 @@ function set_version_in_file {
   fi
 }
 
-# Inserts the first line of changelog file: adds new version and date.
+# Takes care of the first line of changelog file.
+# There are various cases supported. Suppose we bump to 0.2.0:
+#   Case 1 - changelog 1st line contains older version header or no header
+#     ### 0.1.0 (2017-Apr-29)
+#     Becomes:
+#     ### 0.2.0 (2017-Apr-30)
+#     ### 0.1.0 (2017-Apr-29)
+#   Case 2 - changelog 1st line contains the same version header
+#     ### 0.2.0 (2017-Apr-30)
+#     Becomes: (no changes, even if date is different)
+#     ### 0.2.0 (2017-Apr-30)
+#   Case 3 - changelog 1st line contains Unreleased and the same version header:
+#     ### 0.2.0 - Unreleased
+#     Becomes:
+#     ### 0.2.0 (2017-Apr-29)
+#   Case 4 - changelog 1st line contains Unreleased and older version header:
+#     ### 0.1.0 - Unreleased
+#     Becomes:
+#     ### 0.2.0 (2017-Apr-29)
+#
 # Arguments:
 #   new_version
 #   changelog_file
@@ -266,24 +285,35 @@ function set_version_in_changelog {
     return 1
   fi
 
-  # make this function idempotent
-  changelog_first_line=$(head -1 ${changelog_file})
-  if [[ "${changelog_first_line}" == "### ${new_version} "* ]];then
-    log_debug "Version in changelog is already set"
-  else
+  changelog_first_line=$(cat ${changelog_file} | head -1)
+  if [[ "${changelog_first_line}" == "### "*" - Unreleased" ]];then
+    log_debug "Setting data in changelog from Unreleased"
     release_date=$(date +%Y-%b-%d)
     new_line="### ${new_version} (${release_date})"
+    new_changelog_contents=$(sed "s/### .* - Unreleased/${new_line}/g" ${changelog_file})
+    if [[ "${dryrun}" != "true" ]];then
+      echo "${new_changelog_contents}" > "${changelog_file}"
+    fi
+    return $?
+  elif [[ "${changelog_first_line}" == "### ${new_version} "* ]];then
+    # idempotent
+    log_debug "Version in changelog is already set"
+    return 0
+  else
     log_debug "Will add new line to changelog:"
+    release_date=$(date +%Y-%b-%d)
+    new_line="### ${new_version} (${release_date})"
     log_debug "${new_line}"
     if [[ "${dryrun}" != "true" ]];then
       old_changelog=$(cat "${changelog_file}")
       echo "${new_line}" > "${changelog_file}"
       echo "" >> "${changelog_file}"
       echo "${old_changelog}" >> "${changelog_file}"
-      # this does not work, newline is not printed, even with echo -e
-      new_changelog="${new_line}\n${old_changelog}"
+      # this does not work, newline is not printed, even with echo -e:
+      # new_changelog="${new_line}\n${old_changelog}"
+      return $?
     fi
-  fi  
+  fi
 }
 
 function publish_to_archive {
@@ -328,7 +358,8 @@ function publish_to_archive {
 
 # You should invoke that function before running any end user functions.
 function releaser_init {
-  changelog_file="$(pwd)/CHANGELOG.md"
+  default_changelog_file="$(pwd)/CHANGELOG.md"
+  changelog_file="${changelog_file:-${default_changelog_file}}"
   variables_file="$(pwd)/releaserrc"
   if [[ -f "${variables_file}" ]]; then
     source "${variables_file}"
