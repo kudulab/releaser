@@ -13,7 +13,7 @@ case "${command}" in
       exit $?
       ;;
   verify_version)
-      verify_version_no_version_file
+      verify_version_for_release
       exit $?
       ;;
   unit)
@@ -25,7 +25,7 @@ case "${command}" in
       exit $?
       ;;
   release)
-      verify_version_no_version_file
+      verify_version_for_release
       git_tag_from_oversion
       exit $?
       ;;

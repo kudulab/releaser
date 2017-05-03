@@ -113,7 +113,7 @@ function parse_oversion_file {
   log_debug "Done parsing ${oversion_file}"
 }
 
-function get_next_version {
+function get_next_oversion {
   parse_oversion_file
   exit_status="$?"
   if [[ "${exit_status}" != 0 ]]; then
@@ -143,7 +143,7 @@ function get_next_version {
 }
 # Arguments:
 #  * next_version
-function set_next_version {
+function set_next_oversion {
   next_version="$1"
   if [[ -z "${next_version}" ]]; then
     log_error "next_version not set"
@@ -216,7 +216,7 @@ function validate_version_is_semver {
 #   line_pattern
 #   new_version
 #   version_file
-function locally_bump_version_in_versionfile {
+function set_version_in_file {
   line_pattern="$1"
   version_file="$2"
   new_version="$3"
@@ -245,11 +245,30 @@ function locally_bump_version_in_versionfile {
   fi
 }
 
-# Inserts the first line of changelog file: adds new version and date.
+# Takes care of the first line of changelog file.
+# There are various cases supported. Suppose we bump to 0.2.0:
+#   Case 1 - changelog 1st line contains older version header or no header
+#     ### 0.1.0 (2017-Apr-29)
+#     Becomes:
+#     ### 0.2.0 (2017-Apr-30)
+#     ### 0.1.0 (2017-Apr-29)
+#   Case 2 - changelog 1st line contains the same version header
+#     ### 0.2.0 (2017-Apr-30)
+#     Becomes: (no changes, even if date is different)
+#     ### 0.2.0 (2017-Apr-30)
+#   Case 3 - changelog 1st line contains Unreleased and the same version header:
+#     ### 0.2.0 - Unreleased
+#     Becomes:
+#     ### 0.2.0 (2017-Apr-29)
+#   Case 4 - changelog 1st line contains Unreleased and older version header:
+#     ### 0.1.0 - Unreleased
+#     Becomes:
+#     ### 0.2.0 (2017-Apr-29)
+#
 # Arguments:
 #   new_version
 #   changelog_file
-function locally_bump_version_in_changelog {
+function set_version_in_changelog {
   changelog_file="$1"
   new_version="$2"
 
@@ -265,17 +284,35 @@ function locally_bump_version_in_changelog {
     log_error "${changelog_file} does not exist"
     return 1
   fi
-  release_date=$(date +%Y-%b-%d)
-  new_line="### ${new_version} (${release_date})"
-  log_debug "Will add new line to changelog:"
-  log_debug "${new_line}"
-  if [[ "${dryrun}" != "true" ]];then
-    old_changelog=$(cat "${changelog_file}")
-    echo "${new_line}" > "${changelog_file}"
-    echo "" >> "${changelog_file}"
-    echo "${old_changelog}" >> "${changelog_file}"
-    # this does not work, newline is not printed, eve with echo -e
-    new_changelog="${new_line}\n${old_changelog}"
+
+  changelog_first_line=$(cat ${changelog_file} | head -1)
+  if [[ "${changelog_first_line}" == "### "*" - Unreleased" ]];then
+    log_debug "Setting data in changelog from Unreleased"
+    release_date=$(date +%Y-%b-%d)
+    new_line="### ${new_version} (${release_date})"
+    new_changelog_contents=$(sed "s/### .* - Unreleased/${new_line}/g" ${changelog_file})
+    if [[ "${dryrun}" != "true" ]];then
+      echo "${new_changelog_contents}" > "${changelog_file}"
+    fi
+    return $?
+  elif [[ "${changelog_first_line}" == "### ${new_version} "* ]];then
+    # idempotent
+    log_debug "Version in changelog is already set"
+    return 0
+  else
+    log_debug "Will add new line to changelog:"
+    release_date=$(date +%Y-%b-%d)
+    new_line="### ${new_version} (${release_date})"
+    log_debug "${new_line}"
+    if [[ "${dryrun}" != "true" ]];then
+      old_changelog=$(cat "${changelog_file}")
+      echo "${new_line}" > "${changelog_file}"
+      echo "" >> "${changelog_file}"
+      echo "${old_changelog}" >> "${changelog_file}"
+      # this does not work, newline is not printed, even with echo -e:
+      # new_changelog="${new_line}\n${old_changelog}"
+      return $?
+    fi
   fi
 }
 
@@ -321,7 +358,8 @@ function publish_to_archive {
 
 # You should invoke that function before running any end user functions.
 function releaser_init {
-  changelog_file="$(pwd)/CHANGELOG.md"
+  default_changelog_file="$(pwd)/CHANGELOG.md"
+  changelog_file="${changelog_file:-${default_changelog_file}}"
   variables_file="$(pwd)/releaserrc"
   if [[ -f "${variables_file}" ]]; then
     source "${variables_file}"
@@ -334,14 +372,14 @@ function releaser_init {
 
 # This function should be used in any project that does not use version file,
 # e.g. ide docker image.
-function verify_version_no_version_file {
+function verify_version_for_release {
   # Test that the version was not already released.
   version_from_changelog=$(get_last_version_from_changelog "${changelog_file}")
   if git tag | grep "${version_from_changelog}"; then
     log_error "The last version from changelog was already git tagged: ${version_from_changelog}"
     exit 1
   fi
-  version_from_oversion=$(get_next_version)
+  version_from_oversion=$(get_next_oversion)
   if git tag | grep "${version_from_oversion}"; then
     log_error "The last version from oversion was already git tagged: ${version_from_oversion}"
     exit 1
@@ -354,7 +392,7 @@ function verify_version_no_version_file {
 }
 
 function git_tag_from_oversion {
-  new_version="$(get_next_version)"
+  new_version="$(get_next_oversion)"
   git tag "${new_version}" && git push origin "${new_version}"
 }
 # This function:
@@ -369,16 +407,16 @@ function bump_changelog_and_oversion {
   new_version="$1"
   if [[ -z "${new_version}" ]];then
     # get next_version from Consul, which was last released
-    old_version="$(get_next_version)"
+    old_version="$(get_next_oversion)"
     new_version="$(bump_patch_version ${old_version})"
   fi
   log_debug "Validating new_version"
   validate_version_is_semver "${new_version}"
   log_info "New version will be: ${new_version}"
-  locally_bump_version_in_changelog "${changelog_file}" "${new_version}"
+  set_version_in_changelog "${changelog_file}" "${new_version}"
   log_info "Bumped to ${new_version} in ${changelog_file}"
   # set it in Consul
-  set_next_version "${new_version}"
+  set_next_oversion "${new_version}"
 }
 
 ################################################################################
@@ -389,18 +427,18 @@ function ide_docker_image_bump_old {
   new_version="$1"
   if [[ -z "${new_version}" ]];then
     # get next_version from Consul, which was last released
-    old_version="$(get_next_version)"
+    old_version="$(get_next_oversion)"
     new_version="$(bump_patch_version ${old_version})"
   fi
   log_info "New version will be: ${new_version}"
   log_debug "Validating new_version"
   validate_version_is_semver "${new_version}"
   # set it locally
-  locally_bump_version_in_versionfile "export this_image_tag=" "${version_file}" "${new_version}"
-  locally_bump_version_in_changelog "${changelog_file}" "${new_version}"
+  set_version_in_file "export this_image_tag=" "${version_file}" "${new_version}"
+  set_version_in_changelog "${changelog_file}" "${new_version}"
   log_info "Bumped to ${new_version} in ${version_file} and ${changelog_file}"
   # set it in Consul
-  set_next_version "${new_version}"
+  set_next_oversion "${new_version}"
 }
 
 ################################################################################
@@ -421,11 +459,11 @@ function bump_chart_version {
   new_version="$2"
   if [[ -z "${new_version}" ]];then
     # get next_version from Consul, which was last released
-    old_version="$(get_next_version)"
+    old_version="$(get_next_oversion)"
     new_version="$(bump_patch_version ${old_version})"
   fi
 
-  locally_bump_version_in_versionfile "version: " "${version_file}" "${new_version}"
+  set_version_in_file "version: " "${version_file}" "${new_version}"
   log_info "Bumped to ${new_version} in ${version_file}"
 }
 function verify_version_not_released_chart {

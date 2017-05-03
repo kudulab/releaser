@@ -18,5 +18,5 @@ k8s_chart=$(readlink -f ${k8s_chart})
   # cleanup
   cd ${k8s_chart} && git reset --hard
   rm -rf "${k8s_chart}/.git"
-  /bin/bash -c "cd ${k8s_chart} && source ${releaser} && set_next_version 0.1.0"
+  /bin/bash -c "cd ${k8s_chart} && source ${releaser} && set_next_oversion 0.1.0"
 }

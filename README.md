@@ -25,7 +25,7 @@ source releaser
 ### Validate that loaded
 
 To validate that releaser functions are loaded use: `releaser_loaded` function
-or any other releaser function, e.g.: `get_next_version`.
+or any other releaser function, e.g.: `get_next_oversion`.
 
 ### Dependencies
 * Bash
@@ -45,6 +45,7 @@ Recommended usage for a project:
 1. Provide `./releaserrc` file to set variables (this is optional).
 1. Provide `./tasks` file with bash `case` (switch). It will allow to run
  a limited amount of commands). Example:
+
 ```bash
 #!/bin/bash
 
@@ -62,7 +63,7 @@ case "${command}" in
       exit $?
       ;;
   verify_version)
-      verify_version_no_version_file
+      verify_version_for_release
       exit $?
       ;;
   unit)
@@ -76,6 +77,7 @@ case "${command}" in
 esac
 set +e
 ```
+
 Now you can use it:
 * `./tasks bump`
 * `./tasks verify_version`
@@ -118,13 +120,13 @@ We treat version set in OVersion backend (usually Consul) as the only truth
 
 Get version from OVersion backend:
 ```
-next_version=$(source releaser && get_next_version)
+next_version=$(source releaser && get_next_oversion)
 echo "${next_version}"
 ```
 
 Set version into OVersion backend:
 ```
-source releaser && set_next_version 0.2.4
+source releaser && set_next_oversion 0.2.4
 ```
 
 ## Development
