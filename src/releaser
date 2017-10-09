@@ -373,6 +373,11 @@ function releaser_init {
 # This function should be used in any project that does not use version file,
 # e.g. ide docker image.
 function verify_version_for_release {
+  changelog_first_line=$(cat ${changelog_file} | head -1)
+  if [[ "${changelog_first_line}" == "#"*" - Unreleased" ]];then
+    log_error "Top of changelog has 'Unreleased' flag"
+    exit 1
+  fi
   # Test that the version was not already released.
   version_from_changelog=$(get_last_version_from_changelog "${changelog_file}")
   if git tag | grep "${version_from_changelog}"; then
