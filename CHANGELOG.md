@@ -1,3 +1,7 @@
+### 1.0.1 (2017-Oct-09)
+
+* verify_version_for_release checks for `Unreleased` keyword on top
+
 ### 1.0.0 (2017-May-03)
 
 * \#11010 renamed functions:

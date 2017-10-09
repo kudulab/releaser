@@ -8,7 +8,7 @@ All the releaser functions are available after you install it.
 ### In current shell
 If you want to run releaser in current shell:
 ```bash
-releaser_loaded || eval "$(curl http://archive.ai-traders.com/releaser/0.3.0/releaser)"
+releaser_loaded || eval "$(curl http://archive.ai-traders.com/releaser/1.0.1/releaser)"
 ```
  Do not use it in a script as it would always redownload the file.
 
@@ -17,7 +17,7 @@ releaser_loaded || eval "$(curl http://archive.ai-traders.com/releaser/0.3.0/rel
 If you want to run releaser from a script:
 ```bash
 if [[ ! -f ./releaser ]];then
-  wget http://archive.ai-traders.com/releaser/0.3.0/releaser
+  wget http://archive.ai-traders.com/releaser/1.0.1/releaser
 fi
 source releaser
 ```
@@ -51,7 +51,7 @@ Recommended usage for a project:
 
 set -e
 if [[ ! -f ./releaser ]];then
-  wget http://archive.ai-traders.com/releaser/0.3.0/releaser
+  wget http://archive.ai-traders.com/releaser/1.0.1/releaser
 fi
 source releaser
 releaser_init
