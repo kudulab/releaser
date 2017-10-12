@@ -20,19 +20,19 @@ program_name() {
 }
 log_debug() {
   if [ "${RELEASER_LOG_LEVEL}" == "debug" ]; then
-    echo -e "$(date "+%d-%m-%Y %T") $(program_name) debug: ${1}" >&2
+    echo -e "$(LANG=en_US date "+%d-%m-%Y %T") $(program_name) debug: ${1}" >&2
   fi
 }
 log_info() {
-  echo -e "$(date "+%d-%m-%Y %T") $(program_name) info: ${1}" >&2
+  echo -e "$(LANG=en_US date "+%d-%m-%Y %T") $(program_name) info: ${1}" >&2
 }
 log_error() {
-  echo -e "\e[31m$(date "+%d-%m-%Y %T") $(program_name) error: $1\e[0m" >&2
-  echo -e "\e[31m$(date "+%d-%m-%Y %T") $(program_name) error: File: ${BASH_SOURCE[0]}\e[0m" >&2
-  echo -e "\e[31m$(date "+%d-%m-%Y %T") $(program_name) error: Line numbers: ${BASH_LINENO[*]}\e[0m" >&2
+  echo -e "\e[31m$(LANG=en_US date "+%d-%m-%Y %T") $(program_name) error: $1\e[0m" >&2
+  echo -e "\e[31m$(LANG=en_US date "+%d-%m-%Y %T") $(program_name) error: File: ${BASH_SOURCE[0]}\e[0m" >&2
+  echo -e "\e[31m$(LANG=en_US date "+%d-%m-%Y %T") $(program_name) error: Line numbers: ${BASH_LINENO[*]}\e[0m" >&2
 }
 log_warn() {
-  echo -e "\e[33m$(date "+%d-%m-%Y %T") $(program_name) warn: $1\e[0m" >&2
+  echo -e "\e[33m$(LANG=en_US date "+%d-%m-%Y %T") $(program_name) warn: $1\e[0m" >&2
 }
 
 # In order to load all the releaser functions once you can run:
@@ -288,7 +288,7 @@ function set_version_in_changelog {
   changelog_first_line=$(cat ${changelog_file} | head -1)
   if [[ "${changelog_first_line}" == "### "*" - Unreleased" ]];then
     log_debug "Setting data in changelog from Unreleased"
-    release_date=$(date +%Y-%b-%d)
+    release_date=$(LANG=en_US date +%Y-%b-%d)
     new_line="### ${new_version} (${release_date})"
     new_changelog_contents=$(sed "s/### .* - Unreleased/${new_line}/g" ${changelog_file})
     if [[ "${dryrun}" != "true" ]];then
@@ -301,7 +301,7 @@ function set_version_in_changelog {
     return 0
   else
     log_debug "Will add new line to changelog:"
-    release_date=$(date +%Y-%b-%d)
+    release_date=$(LANG=en_US date +%Y-%b-%d)
     new_line="### ${new_version} (${release_date})"
     log_debug "${new_line}"
     if [[ "${dryrun}" != "true" ]];then

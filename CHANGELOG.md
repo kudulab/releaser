@@ -1,3 +1,7 @@
+### 1.0.2 (2017-Oct-12)
+
+* always use date in English
+
 ### 1.0.1 (2017-Oct-09)
 
 * verify_version_for_release checks for `Unreleased` keyword on top
