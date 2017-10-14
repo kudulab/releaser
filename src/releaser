@@ -370,15 +370,8 @@ function releaser_init {
   log_info "Changelog file: ${changelog_file}"
 }
 
-# This function should be used in any project that does not use version file,
-# e.g. ide docker image.
-function verify_version_for_release {
-  changelog_first_line=$(cat ${changelog_file} | head -1)
-  if [[ "${changelog_first_line}" == "#"*" - Unreleased" ]];then
-    log_error "Top of changelog has 'Unreleased' flag"
-    exit 1
-  fi
-  # Test that the version was not already released.
+# Test that the version was not already released.
+function verify_version_not_released_before {
   version_from_changelog=$(get_last_version_from_changelog "${changelog_file}")
   if git tag | grep "${version_from_changelog}"; then
     log_error "The last version from changelog was already git tagged: ${version_from_changelog}"
@@ -389,8 +382,23 @@ function verify_version_for_release {
     log_error "The last version from oversion was already git tagged: ${version_from_oversion}"
     exit 1
   fi
+  log_info "Version was not released before"
+}
+function verify_version_in_changelog_matches_in_oversion {
   if [[ "${version_from_changelog}" != "${version_from_oversion}" ]]; then
     log_error "version_from_changelog: ${version_from_changelog} != version_from_oversion: ${version_from_oversion}"
+    exit 1
+  fi
+  log_info "Version in changelog matches version in OVersion"
+}
+# This function should be used in any project that does not use version file,
+# e.g. ide docker image.
+function verify_version_for_release {
+  verify_version_not_released_before
+  verify_version_in_changelog_matches_in_oversion
+  changelog_first_line=$(cat ${changelog_file} | head -1)
+  if [[ "${changelog_first_line}" == "#"*"Unreleased"* ]];then
+    log_error "Top of changelog has 'Unreleased' flag"
     exit 1
   fi
   log_info "Version verified successfully"

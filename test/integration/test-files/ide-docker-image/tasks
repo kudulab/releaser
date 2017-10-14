@@ -16,6 +16,12 @@ case "${command}" in
       exit $?
       ;;
   verify_version)
+      verify_version_in_changelog_matches_in_oversion
+      verify_version_not_released_before
+      exit $?
+      ;;
+  verify_version_for_release)
+      # this task is for testing purposes only, do not treat as example
       verify_version_for_release
       exit $?
       ;;

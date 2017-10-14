@@ -102,8 +102,15 @@ teardown() {
 @test "verify_version returns 0 if there is no git tag for last changelog version and next_version from oversion" {
   # we pretend that 0.1.0 was already released and next version is 0.1.1 (not released)
   run /bin/bash -c "cd ${ide_docker_image_dir} && source ${releaser} && set_next_oversion \"0.1.1\""
-  run /bin/bash -c "cd ${ide_docker_image_dir} && git init && git add --all && git commit -m first && git tag 0.1.0 && ./tasks verify_version"
+  run /bin/bash -c "cd ${ide_docker_image_dir} && git init && git add --all && git commit -m first && git tag 0.1.0 && ./tasks verify_version_for_release"
   echo "output: ${output}"
   assert_output --partial "Version verified successfully"
   assert_equal "$status" 0
+}
+@test "verify_version returns 1 if changelog first line contains string: 'Unreleased'" {
+  run /bin/bash -c "cd ${ide_docker_image_dir} && source ${releaser} && set_next_oversion \"0.1.1\""
+  run /bin/bash -c "cd ${ide_docker_image_dir} && git init && changelog_file=CHANGELOG-unreleased.md ./tasks verify_version_for_release"
+  echo "output: ${output}"
+  assert_output --partial "Top of changelog has 'Unreleased' flag"
+  assert_equal "$status" 1
 }

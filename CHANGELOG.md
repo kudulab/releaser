@@ -1,3 +1,11 @@
+### 1.0.3 (2017-Oct-14)
+
+* we still need functions to check that #11709
+   * version was not released already
+   * version in changelog and in oversion match
+even if `Unreleased` is set in Changelog.
+* easier check for `Unreleased` in Changelog, added a test
+
 ### 1.0.2 (2017-Oct-12)
 
 * always use date in English
