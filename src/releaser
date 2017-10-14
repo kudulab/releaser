@@ -364,10 +364,10 @@ function releaser_init {
   if [[ -f "${variables_file}" ]]; then
     source "${variables_file}"
   else
-    log_warn "File: ${variables_file} does not exist, but it is ok."
+    log_debug "File: ${variables_file} does not exist, but it is ok."
   fi
   log_info "Current directory: $(pwd)"
-  log_info "Changelog file: ${changelog_file}"
+  log_debug "Changelog file: ${changelog_file}"
 }
 
 # Test that the version was not already released.
