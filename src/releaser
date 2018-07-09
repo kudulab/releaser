@@ -397,7 +397,7 @@ function verify_version_for_release {
   verify_version_not_released_before
   verify_version_in_changelog_matches_in_oversion
   changelog_first_line=$(cat ${changelog_file} | head -1)
-  if [[ "${changelog_first_line}" == "#"*"Unreleased"* ]];then
+  if [[ "${changelog_first_line}" == "#"*"Unreleased"* ]] || [[ "${changelog_first_line}" == "#"*"unreleased"* ]] || [[ "${changelog_first_line}" == "#"*"UNRELEASED"* ]];then
     log_error "Top of changelog has 'Unreleased' flag"
     exit 1
   fi

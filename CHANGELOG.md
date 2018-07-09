@@ -1,3 +1,7 @@
+### 1.0.4 (2018-Jul-09)
+
+* in the function: `verify_version_for_release` recognize many variants of 'unreleased'
+
 ### 1.0.3 (2017-Oct-14)
 
 * we still need functions to check that #11709
