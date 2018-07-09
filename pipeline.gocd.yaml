@@ -13,7 +13,7 @@ pipelines:
           clean_workspace: true
           jobs:
             verify_version:
-              elastic_profile_id: w.c2.m2048.e10
+              elastic_profile_id: w.c1.m1024.e5
               tasks:
                 - exec:
                     command: /bin/bash
@@ -34,7 +34,7 @@ pipelines:
           clean_workspace: true
           jobs:
             code:
-              elastic_profile_id: w.c2.m2048.e10
+              elastic_profile_id: w.c1.m1024.e5
               tasks:
                 - exec:
                     command: /bin/bash
@@ -45,7 +45,7 @@ pipelines:
           clean_workspace: true
           jobs:
             code:
-              elastic_profile_id: w.c2.m2048.e10
+              elastic_profile_id: w.c1.m1024.e5
               tasks:
                 - exec:
                     command: /bin/bash

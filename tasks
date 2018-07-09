@@ -8,7 +8,7 @@ releaser_init
 set -e
 command="$1"
 case "${command}" in
-  bump)
+  set_version)
       bump_changelog_and_oversion "$2"
       exit $?
       ;;

@@ -58,7 +58,7 @@ releaser_init
 
 command="$1"
 case "${command}" in
-  bump)
+  set_version)
       bump_changelog_and_oversion "$2"
       exit $?
       ;;
@@ -79,7 +79,7 @@ set +e
 ```
 
 Now you can use it:
-* `./tasks bump`
+* `./tasks set_version`
 * `./tasks verify_version`
 * `./tasks unit`
 
