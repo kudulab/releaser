@@ -1,3 +1,5 @@
+### 1.0.5 (2018-Oct-21)
+
 * get_last_version_from_changelog now reads the changelog file until it finds
  a line that matches version pattern (previously only 1st line was read)
 * removed releaserrc file, we never used it
