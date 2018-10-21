@@ -42,10 +42,26 @@ function releaser_loaded {
   return 0
 }
 
+# This function exists, because in bash: return in the while loop scope
+# does not exit the whole function.
+function get_last_version_from_changelog_inner {
+  local changelog_file="${1}"
+  cat ${changelog_file} | \
+  while read line; do
+      version=$(echo "${line}" | grep -o -e "# [0-9]*\.[0-9]*\.[0-9]*" | grep -o -e "[0-9]*\.[0-9]*\.[0-9]*")
+      if [[ "${version}" != "" ]];then
+        echo "${version}"
+        return 0
+      fi
+  done
+}
+
+# Reads the changelog file line by line, finds the first line that
+# matches version patter and returns the version.
 # Arguments:
 #   changelog_file
 function get_last_version_from_changelog {
-  changelog_file="$1"
+  local changelog_file="${1:-CHANGELOG.md}"
   if [[ -z "${changelog_file}" ]];then
     log_error "changelog_file not set"
     return 1
@@ -54,9 +70,9 @@ function get_last_version_from_changelog {
     log_error "${changelog_file} does not exist"
     return 1
   fi
-  version=$(cat $changelog_file | head -1 | grep -o -e "[0-9]*\.[0-9]*\.[0-9]*")
+  version="$(get_last_version_from_changelog_inner ${changelog_file})"
   if [[ "${version}" == "" ]];then
-    log_error "Could not get last version from ${changelog_file}"
+    log_error "No line in ${changelog_file} matches version pattern! (# [0-9]*\.[0-9]*\.[0-9]*)"
     return 1
   fi
   echo "${version}"
