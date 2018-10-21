@@ -2,6 +2,7 @@
  a line that matches version pattern (previously only 1st line was read)
 * removed releaserrc file, we never used it
 * rename log functions so that they are not overridden by other bash helpers
+* looser check for `Unreleased` in changelog
 
 ### 1.0.4 (2018-Jul-09)
 

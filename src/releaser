@@ -300,11 +300,11 @@ function set_version_in_changelog {
   fi
 
   changelog_first_line=$(cat ${changelog_file} | head -1)
-  if [[ "${changelog_first_line}" == "### "*" - Unreleased" ]];then
+  if [[ "${changelog_first_line}" == "### "*"Unreleased" ]];then
     releaser_log_debug "Setting data in changelog from Unreleased"
     release_date=$(LANG=en_US date +%Y-%b-%d)
     new_line="### ${new_version} (${release_date})"
-    new_changelog_contents=$(sed "s/### .* - Unreleased/${new_line}/g" ${changelog_file})
+    new_changelog_contents=$(sed "s/### .*Unreleased/${new_line}/g" ${changelog_file})
     if [[ "${dryrun}" != "true" ]];then
       echo "${new_changelog_contents}" > "${changelog_file}"
     fi
