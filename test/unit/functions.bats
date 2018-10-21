@@ -15,11 +15,20 @@ releaser=$(readlink -f ./src/releaser)
 }
 @test "get_last_version_from_changelog if 1st line has no version" {
   run /bin/bash -c "source ${releaser} && get_last_version_from_changelog \"test/unit/test-files/CHANGELOG.md\""
-  assert_output "0.1.0"
-  assert_equal "$status" 0
+  refute_output --partial "0.1.0"
+  assert_equal "$status" 1
 }
 @test "get_last_version_from_changelog if no version whatsoever" {
   run /bin/bash -c "source ${releaser} && get_last_version_from_changelog \"test/unit/test-files/CHANGELOG-no-version.md\""
+  assert_equal "$status" 1
+}
+@test "get_last_version_from_whole_changelog if 1st line has no version" {
+  run /bin/bash -c "source ${releaser} && get_last_version_from_whole_changelog \"test/unit/test-files/CHANGELOG.md\""
+  assert_output "0.1.0"
+  assert_equal "$status" 0
+}
+@test "get_last_version_from_whole_changelog if no version whatsoever" {
+  run /bin/bash -c "source ${releaser} && get_last_version_from_whole_changelog \"test/unit/test-files/CHANGELOG-no-version.md\""
   assert_equal "$status" 1
 }
 

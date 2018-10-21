@@ -1,7 +1,8 @@
 ### 1.0.5 (2018-Oct-21)
 
-* get_last_version_from_changelog now reads the changelog file until it finds
- a line that matches version pattern (previously only 1st line was read)
+* add new function get_last_version_from_whole_changelog to read the changelog
+ file until it finds a line that matches version pattern (the function:
+  get_last_version_from_changelog reads only the 1st line)
 * removed releaserrc file, we never used it
 * rename log functions so that they are not overridden by other bash helpers
 * looser check for `Unreleased` in changelog
