@@ -9,8 +9,6 @@
 # bash completion results in exit too.
 ################################################################################
 # The Helpers functions:
-#  * are independent of the end user functions and all the variables sourced
-# from releaserrc
 #  * do not assume any default arguments, all variables must be explicitly set.
 #  * are here to have higher test coverage.
 ################################################################################
@@ -369,19 +367,12 @@ function publish_to_archive {
 ################################################################################
 # The End user functions here:
 #  * use default values set in releaser_init function
-#  * use variables from releaserrc file
 ################################################################################
 
 # You should invoke that function before running any end user functions.
 function releaser_init {
   default_changelog_file="$(pwd)/CHANGELOG.md"
   changelog_file="${changelog_file:-${default_changelog_file}}"
-  variables_file="$(pwd)/releaserrc"
-  if [[ -f "${variables_file}" ]]; then
-    source "${variables_file}"
-  else
-    log_debug "File: ${variables_file} does not exist, but it is ok."
-  fi
   log_info "Current directory: $(pwd)"
   log_debug "Changelog file: ${changelog_file}"
 }
