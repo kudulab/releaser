@@ -8,7 +8,7 @@ All the releaser functions are available after you install it.
 ### In current shell
 If you want to run releaser in current shell:
 ```bash
-releaser_loaded || eval "$(curl http://archive.ai-traders.com/releaser/1.0.1/releaser)"
+releaser_loaded || eval "$(curl http://archive.ai-traders.com/releaser/1.0.5/releaser)"
 ```
  Do not use it in a script as it would always redownload the file.
 
@@ -17,7 +17,7 @@ releaser_loaded || eval "$(curl http://archive.ai-traders.com/releaser/1.0.1/rel
 If you want to run releaser from a script:
 ```bash
 if [[ ! -f ./releaser ]];then
-  wget http://archive.ai-traders.com/releaser/1.0.3/releaser
+  wget http://archive.ai-traders.com/releaser/1.0.5/releaser
 fi
 source releaser
 ```
@@ -115,8 +115,8 @@ Helpers functions do not understand end user variables.
 Any project should keep version in Changelog and in OVersion backend.
 We treat version set in OVersion backend (usually Consul) as the only truth
  version in the moment. You should be able to run
-   * `./tasks bump` to bump the path version string fragment
-   * `./tasks bump 3.44.12` to bump to any version string you want
+   * `./tasks set_version` to bump the path version string fragment
+   * `./tasks set_version 3.44.12` to bump to any version string you want
 
 Get version from OVersion backend:
 ```
@@ -135,8 +135,8 @@ source releaser && set_next_oversion 0.2.4
    * `./tasks unit`
    * `./tasks itest`
 1. You decide that it is time for GoCD to test and release your code, so you locally:
-    * run `./tasks bump` to bump the patch version fragment by 1 or
-    `./tasks bump 1.2.3` to bump to a particular version. Version is bumped in Changelog and OVersion backend.
+    * run `./tasks set_version` to bump the patch version fragment by 1 or
+    `./tasks set_version 1.2.3` to bump to a particular version. Version is bumped in Changelog and OVersion backend.
     * merge that branch into master and push to git server
 1. CI pipeline tests and releases releaser.
 

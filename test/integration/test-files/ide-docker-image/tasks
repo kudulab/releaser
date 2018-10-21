@@ -7,12 +7,8 @@ releaser_init
 
 command="$1"
 case "${command}" in
-  bump)
-      bump_changelog_and_oversion "$2"
-      exit $?
-      ;;
-  bump_old)
-      ide_docker_image_bump_old "$2"
+  set_version)
+      bump_changelog_and_oversion "${2}"
       exit $?
       ;;
   verify_version)

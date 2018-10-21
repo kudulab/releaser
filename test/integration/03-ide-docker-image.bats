@@ -36,8 +36,8 @@ teardown() {
   # cleanup
   rm -rf "${ide_docker_image_dir}123"
 }
-@test "bump succeeds if new version not set and we can get version from OVersion backend" {
-  run /bin/bash -c "cd ${ide_docker_image_dir} && git init && git add --all && git commit -m first && ./tasks bump_old"
+@test "set_version succeeds if new version not set and we can get version from OVersion backend" {
+  run /bin/bash -c "cd ${ide_docker_image_dir} && git init && git add --all && git commit -m first && ./tasks set_version"
   echo "output: ${output}"
   assert_output --partial "Got next_version from Consul for docker-releaser-test: 0.1.0"
   assert_output --partial "New version will be: 0.1.1"
@@ -45,13 +45,11 @@ teardown() {
   assert_output --partial "Set next_version into Consul for docker-releaser-test: 0.1.1"
   assert_equal "$status" 0
 
-  run /bin/bash -c "cat ${ide_docker_image_dir}/image/etc_ide.d/variables/60-variables.sh | grep \"0.1.1\""
-  assert_equal "$status" 0
   run /bin/bash -c "cat ${ide_docker_image_dir}/CHANGELOG.md | head -1 | grep \"### 0.1.1 (20\""
   assert_equal "$status" 0
 }
-@test "bump succeeds if Unreleased in changelog - same version changelog contains" {
-  run /bin/bash -c "cd ${ide_docker_image_dir} && git init && git add --all && git commit -m first && changelog_file=CHANGELOG-unreleased.md RELEASER_LOG_LEVEL=debug ./tasks bump_old 0.1.1"
+@test "set_version succeeds if Unreleased in changelog - same version changelog contains" {
+  run /bin/bash -c "cd ${ide_docker_image_dir} && git init && git add --all && git commit -m first && changelog_file=CHANGELOG-unreleased.md RELEASER_LOG_LEVEL=debug ./tasks set_version 0.1.1"
   echo "output: ${output}"
   assert_output --partial "Setting data in changelog from Unreleased"
   assert_output --partial "New version will be: 0.1.1"
@@ -59,8 +57,6 @@ teardown() {
   assert_output --partial "Set next_version into Consul for docker-releaser-test: 0.1.1"
   assert_equal "$status" 0
 
-  run /bin/bash -c "cat ${ide_docker_image_dir}/image/etc_ide.d/variables/60-variables.sh | grep \"0.1.1\""
-  assert_equal "$status" 0
   run /bin/bash -c "cat ${ide_docker_image_dir}/CHANGELOG-unreleased.md | grep -c \"### 0.1.1 (20\""
   assert_output "1"
   assert_equal "$status" 0
@@ -68,8 +64,8 @@ teardown() {
   assert_output "0"
   assert_equal "$status" 1
 }
-@test "bump succeeds if Unreleased in changelog - different version changelog contains" {
-  run /bin/bash -c "cd ${ide_docker_image_dir} && git init && git add --all && git commit -m first && changelog_file=CHANGELOG-unreleased.md RELEASER_LOG_LEVEL=debug ./tasks bump_old 0.28.2"
+@test "set_version succeeds if Unreleased in changelog - different version changelog contains" {
+  run /bin/bash -c "cd ${ide_docker_image_dir} && git init && git add --all && git commit -m first && changelog_file=CHANGELOG-unreleased.md RELEASER_LOG_LEVEL=debug ./tasks set_version 0.28.2"
   echo "output: ${output}"
   assert_output --partial "Setting data in changelog from Unreleased"
   assert_output --partial "New version will be: 0.28.2"
@@ -77,8 +73,6 @@ teardown() {
   assert_output --partial "Set next_version into Consul for docker-releaser-test: 0.28.2"
   assert_equal "$status" 0
 
-  run /bin/bash -c "cat ${ide_docker_image_dir}/image/etc_ide.d/variables/60-variables.sh | grep \"0.28.2\""
-  assert_equal "$status" 0
   run /bin/bash -c "cat ${ide_docker_image_dir}/CHANGELOG-unreleased.md | grep -c \"### 0.28.2 (20\""
   assert_output "1"
   assert_equal "$status" 0
