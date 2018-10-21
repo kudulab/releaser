@@ -440,28 +440,6 @@ function bump_changelog_and_oversion {
 }
 
 ################################################################################
-# Common for ide docker image project type
-################################################################################
-
-function ide_docker_image_bump_old {
-  new_version="$1"
-  if [[ -z "${new_version}" ]];then
-    # get next_version from Consul, which was last released
-    old_version="$(get_next_oversion)"
-    new_version="$(bump_patch_version ${old_version})"
-  fi
-  log_info "New version will be: ${new_version}"
-  log_debug "Validating new_version"
-  validate_version_is_semver "${new_version}"
-  # set it locally
-  set_version_in_file "export this_image_tag=" "${version_file}" "${new_version}"
-  set_version_in_changelog "${changelog_file}" "${new_version}"
-  log_info "Bumped to ${new_version} in ${version_file} and ${changelog_file}"
-  # set it in Consul
-  set_next_oversion "${new_version}"
-}
-
-################################################################################
 # Common for ide k8s chart project type
 ################################################################################
 
