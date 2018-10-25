@@ -1,3 +1,7 @@
+### 1.0.6 (2018-Oct-25)
+
+* revert deleting the methods `log_`*, because we use them in many other projects
+
 ### 1.0.5 (2018-Oct-21)
 
 * add new function get_last_version_from_whole_changelog to read the changelog
