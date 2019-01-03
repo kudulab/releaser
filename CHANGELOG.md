@@ -1,3 +1,7 @@
+### 1.0.8 (2019-Jan-03)
+
+* add function bump_changelog_version that sets version in changelog only
+
 ### 1.0.7 (2019-Jan-03)
 
 * add function verify_changelog_version that verifies only changelog version

@@ -488,6 +488,18 @@ function bump_changelog_and_oversion {
   # set it in Consul
   set_next_oversion "${new_version}"
 }
+function bump_changelog_version {
+  next_version="$1"
+  if [[ -n "${next_version}" ]];then
+    echo "Version explicitly set to: ${next_version}"
+  else
+    last_version=$(get_last_version_from_changelog "${changelog_file}")
+    next_version=$(bump_patch_version "${last_version}")
+    echo "Version patch number bumped based on last changelog version. Version set to: ${next_version}"
+  fi
+  set_version_in_changelog "${changelog_file}" "${next_version}"
+  echo "Bumped to ${next_version}"
+}
 
 ################################################################################
 # Common for ide k8s chart project type
