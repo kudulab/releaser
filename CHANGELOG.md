@@ -1,6 +1,10 @@
+### 1.0.7 (2019-Jan-03)
+
+* add function verify_changelog_version that verifies only changelog version
+
 ### 1.0.6 (2018-Oct-25)
 
-* revert deleting the methods `log_`*, because we use them in many other projects
+* revert deleting the methods `log_`\*, because we use them in many other projects
 
 ### 1.0.5 (2018-Oct-21)
 

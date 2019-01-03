@@ -446,6 +446,21 @@ function verify_version_for_release {
   releaser_log_info "Version verified successfully"
 }
 
+function verify_changelog_version {
+  version=$(get_last_version_from_changelog "${changelog_file}")
+  if git tag | grep "${version}"; then
+    releaser_log_error "The last version from changelog was already git tagged: ${version}"
+    exit 1
+  fi
+  validate_version_is_semver "${version}"
+  changelog_first_line=$(cat ${changelog_file} | head -1)
+  if [[ "${changelog_first_line}" == "#"*"Unreleased"* ]] || [[ "${changelog_first_line}" == "#"*"unreleased"* ]] || [[ "${changelog_first_line}" == "#"*"UNRELEASED"* ]];then
+    releaser_log_error "Top of changelog has 'Unreleased' flag"
+    exit 1
+  fi
+  releaser_log_info "Changelog version verified successfully"
+}
+
 function git_tag_from_oversion {
   new_version="$(get_next_oversion)"
   git tag "${new_version}" && git push origin "${new_version}"
