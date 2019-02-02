@@ -3,27 +3,26 @@
 set -e
 releaser=$(readlink -f ../../../../src/releaser)
 source ${releaser}
-releaser_init
 
 command="$1"
 case "${command}" in
   set_version)
-      bump_changelog_and_oversion "${2}"
+      releaser::bump_changelog_and_oversion "${2}"
       exit $?
       ;;
   verify_version)
-      verify_version_in_changelog_matches_in_oversion
-      verify_version_not_released_before
+      releaser::verify_version_in_changelog_matches_in_oversion
+      releaser::verify_version_not_released_before
       exit $?
       ;;
   verify_version_for_release)
       # this task is for testing purposes only, do not treat as example
-      verify_version_for_release
+      releaser::verify_version_for_release
       exit $?
       ;;
   release)
-      verify_version_for_release
-      git_tag_from_oversion
+      releaser::verify_version_for_release
+      releaser::git_tag_from_oversion
       exit $?
       ;;
   *)

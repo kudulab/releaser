@@ -3,17 +3,16 @@
 # In production this will be in a local directory
 releaser=$(readlink -f src/releaser)
 source ${releaser}
-releaser_init
 
 set -e
 command="$1"
 case "${command}" in
   set_version)
-      bump_changelog_and_oversion "$2"
+      releaser::bump_changelog_and_oversion "$2"
       exit $?
       ;;
   verify_version)
-      verify_version_for_release
+      releaser::verify_version_for_release
       exit $?
       ;;
   unit)
@@ -25,14 +24,14 @@ case "${command}" in
       exit $?
       ;;
   release)
-      verify_version_for_release
-      git_tag_from_oversion
+      releaser::verify_version_for_release
+      releaser::git_tag_from_oversion
       exit $?
       ;;
   publish)
       # publish the just released version
-      version=$(get_last_git_tagged_version)
-      publish_to_archive "releaser" "${version}" "src/releaser"
+      version=$(releaser::get_last_git_tagged_version)
+      releaser::publish_to_archive "releaser" "${version}" "src/releaser"
       exit $?
       ;;
   *)

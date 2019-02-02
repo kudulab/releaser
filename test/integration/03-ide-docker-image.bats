@@ -28,6 +28,17 @@ teardown() {
 @test "bump fails if new version not set and cannot get version from OVersion backend" {
   rm -rf "${ide_docker_image_dir}123"
   mkdir -p "${ide_docker_image_dir}123"
+  run /bin/bash -c "cd ${ide_docker_image_dir}123 && source ${releaser} && RELEASER_LOG_LEVEL=debug releaser::bump_changelog_and_oversion"
+  echo "output: ${output}"
+  assert_output --partial "oversion.yml does not exist"
+  assert_equal "$status" 1
+
+  # cleanup
+  rm -rf "${ide_docker_image_dir}123"
+}
+@test "bump fails if new version not set and cannot get version from OVersion backend 2" {
+  rm -rf "${ide_docker_image_dir}123"
+  mkdir -p "${ide_docker_image_dir}123"
   run /bin/bash -c "cd ${ide_docker_image_dir}123 && source ${releaser} && RELEASER_LOG_LEVEL=debug bump_changelog_and_oversion"
   echo "output: ${output}"
   assert_output --partial "oversion.yml does not exist"

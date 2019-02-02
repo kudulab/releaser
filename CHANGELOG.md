@@ -1,3 +1,6 @@
+* no need for releaser_init anymore
+* each function now starts with `releaser::` (old function names preserved too)
+
 ### 1.0.8 (2019-Jan-03)
 
 * add function bump_changelog_version that sets version in changelog only

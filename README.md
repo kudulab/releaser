@@ -8,7 +8,7 @@ All the releaser functions are available after you install it.
 ### In current shell
 If you want to run releaser in current shell:
 ```bash
-releaser_loaded || eval "$(curl http://archive.ai-traders.com/releaser/1.0.5/releaser)"
+releaser::loaded || eval "$(curl http://archive.ai-traders.com/releaser/1.1.0/releaser)"
 ```
  Do not use it in a script as it would always redownload the file.
 
@@ -16,10 +16,13 @@ releaser_loaded || eval "$(curl http://archive.ai-traders.com/releaser/1.0.5/rel
 
 If you want to run releaser from a script:
 ```bash
-if [[ ! -f ./releaser ]];then
-  wget http://archive.ai-traders.com/releaser/1.0.5/releaser
+set -Eeuo pipefail
+if [[ ! -f ./releaser ]]; then
+  wget --quiet http://http.archive.ai-traders.com/releaser/1.1.0/releaser || { echo "Cannot download releaser, ignoring."; }
 fi
-source releaser
+if [[ -f ./releaser ]]; then
+  source ./releaser
+fi
 ```
 
 ### Validate that loaded
@@ -41,29 +44,28 @@ apk add -U coreutils
 it is needed for `sort -V` option.
 
 ## Usage
-Recommended usage for a project:
-1. Provide `./releaserrc` file to set variables (this is optional).
-1. Provide `./tasks` file with bash `case` (switch). It will allow to run
+Provide `./tasks` file with bash `case` (switch). It will allow to run
  a limited amount of commands). Example:
 
 ```bash
 #!/bin/bash
 
-set -e
-if [[ ! -f ./releaser ]];then
-  wget http://archive.ai-traders.com/releaser/1.0.3/releaser
+set -Eeuo pipefail
+if [[ ! -f ./releaser ]]; then
+  wget --quiet http://http.archive.ai-traders.com/releaser/1.1.0/releaser || { echo "Cannot download releaser, ignoring."; }
 fi
-source releaser
-releaser_init
+if [[ -f ./releaser ]]; then
+  source ./releaser
+fi
 
 command="$1"
 case "${command}" in
   set_version)
-      bump_changelog_and_oversion "$2"
+      releaser::bump_changelog_and_oversion "$2"
       exit $?
       ;;
-  verify_version)
-      verify_version_for_release
+  verify)
+      releaser::verify_version_for_release
       exit $?
       ;;
   unit)
@@ -80,7 +82,7 @@ set +e
 
 Now you can use it:
 * `./tasks set_version`
-* `./tasks verify_version`
+* `./tasks verify`
 * `./tasks unit`
 
 Thanks to `tasks` file it is easy to know which commands to run when working on a project and we
@@ -101,16 +103,6 @@ You can set those environment variables:
 ### Implementation details
 Releaser code consists of bash functions. They allow each project type for custom release cycle.
 
-There are functions to be treated as helpers and another functions to be treated as end user functions.
-
-#### End user functions
-End user functions are to be used in `tasks` file. End user functions understand
- end user variables (put in `releaserrc` file) and they try to limit the arguments
- they take explicitly. Because it is hard in bash to not set a particular argument.
-
-#### Helpers functions
-Helpers functions do not understand end user variables.
-
 #### Version bump
 Any project should keep version in Changelog and in OVersion backend.
 We treat version set in OVersion backend (usually Consul) as the only truth
@@ -120,7 +112,7 @@ We treat version set in OVersion backend (usually Consul) as the only truth
 
 Get version from OVersion backend:
 ```
-next_version=$(source releaser && get_next_oversion)
+next_version=$(source releaser && releaser::get_next_oversion)
 echo "${next_version}"
 ```
 

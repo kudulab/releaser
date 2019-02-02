@@ -1,84 +1,106 @@
 #!/bin/bash
 
+set -Eeo pipefail
+
+RELEASER_LOG_LEVEL=${RELEASER_LOG_LEVEL:-info}
+dryrun="${dryrun:-false}"
+changelog_file="${changelog_file:-CHANGELOG.md}"
+
 ################################################################################
 # Generally:
 # * Each log output goes to stderrr, so that we can return value from functions
 # with stdout. (Curl does the same).
-# * Do not set here: `set -e`, because after this script is sourced, then
-# using it interactively would be troublesome: exit on each failure and
-# bash completion results in exit too.
-################################################################################
-# The Helpers functions:
-#  * do not assume any default arguments, all variables must be explicitly set.
-#  * are here to have higher test coverage.
 ################################################################################
 
-releaser_program_name() {
+releaser::program_name() {
   echo "RELEASER"
 }
+# obsolete function
+releaser_program_name() {
+  releaser::program_name
+}
+releaser::log_debug() {
+  if [ "${RELEASER_LOG_LEVEL}" == "debug" ]; then
+    echo -e "$(LANG=en_US date "+%d-%m-%Y %T") $(releaser::program_name) debug: ${1}" >&2
+  fi
+}
+# obsolete function
 releaser_log_debug() {
-  if [ "${RELEASER_LOG_LEVEL}" == "debug" ]; then
-    echo -e "$(LANG=en_US date "+%d-%m-%Y %T") $(releaser_program_name) debug: ${1}" >&2
-  fi
+  releaser::log_debug ${1}
 }
-releaser_log_info() {
-  echo -e "$(LANG=en_US date "+%d-%m-%Y %T") $(releaser_program_name) info: ${1}" >&2
-}
-releaser_log_error() {
-  echo -e "\e[31m$(LANG=en_US date "+%d-%m-%Y %T") $(releaser_program_name) error: $1\e[0m" >&2
-  echo -e "\e[31m$(LANG=en_US date "+%d-%m-%Y %T") $(releaser_program_name) error: File: ${BASH_SOURCE[0]}\e[0m" >&2
-  echo -e "\e[31m$(LANG=en_US date "+%d-%m-%Y %T") $(releaser_program_name) error: Line numbers: ${BASH_LINENO[*]}\e[0m" >&2
-}
-releaser_log_warn() {
-  echo -e "\e[33m$(LANG=en_US date "+%d-%m-%Y %T") $(releaser_program_name) warn: $1\e[0m" >&2
-}
+# obsolete function
 log_debug() {
-  if [ "${RELEASER_LOG_LEVEL}" == "debug" ]; then
-    echo -e "$(LANG=en_US date "+%d-%m-%Y %T") $(releaser_program_name) debug: ${1}" >&2
-  fi
+  releaser::log_debug ${1}
 }
+releaser::log_info() {
+  echo -e "$(LANG=en_US date "+%d-%m-%Y %T") $(releaser::program_name) info: ${1}" >&2
+}
+# obsolete function
+releaser_log_info() {
+  releaser::log_info ${1}
+}
+# obsolete function
 log_info() {
-  echo -e "$(LANG=en_US date "+%d-%m-%Y %T") $(releaser_program_name) info: ${1}" >&2
+  releaser::log_info ${1}
 }
+releaser::log_error() {
+  echo -e "\e[31m$(LANG=en_US date "+%d-%m-%Y %T") $(releaser::program_name) error: $1\e[0m" >&2
+  echo -e "\e[31m$(LANG=en_US date "+%d-%m-%Y %T") $(releaser::program_name) error: File: ${BASH_SOURCE[0]}\e[0m" >&2
+  echo -e "\e[31m$(LANG=en_US date "+%d-%m-%Y %T") $(releaser::program_name) error: Line numbers: ${BASH_LINENO[*]}\e[0m" >&2
+}
+# obsolete function
+releaser_log_error() {
+  releaser::log_error ${1}
+}
+# obsolete function
 log_error() {
-  echo -e "\e[31m$(LANG=en_US date "+%d-%m-%Y %T") $(releaser_program_name) error: $1\e[0m" >&2
-  echo -e "\e[31m$(LANG=en_US date "+%d-%m-%Y %T") $(releaser_program_name) error: File: ${BASH_SOURCE[0]}\e[0m" >&2
-  echo -e "\e[31m$(LANG=en_US date "+%d-%m-%Y %T") $(releaser_program_name) error: Line numbers: ${BASH_LINENO[*]}\e[0m" >&2
+  releaser::log_error ${1}
 }
+releaser::log_warn() {
+  echo -e "\e[33m$(LANG=en_US date "+%d-%m-%Y %T") $(releaser::program_name) warn: $1\e[0m" >&2
+}
+# obsolete function
+releaser_log_warn() {
+  releaser::log_warn ${1}
+}
+# obsolete function
 log_warn() {
-  echo -e "\e[33m$(LANG=en_US date "+%d-%m-%Y %T") $(releaser_program_name) warn: $1\e[0m" >&2
+  releaser::log_warn ${1}
 }
 
 # In order to load all the releaser functions once you can run:
-# releaser_loaded || eval "$(curl http://gogs.ai-traders.com/platform/releaser/raw/0.2.0/src/releaser)"
+# releaser::loaded || eval "$(curl http://gogs.ai-traders.com/platform/releaser/raw/0.2.0/src/releaser)"
 # Or you can simply wget that file and source it.
-function releaser_loaded {
+function releaser::loaded {
   return 0
+}
+# obsolete function
+function releaser_loaded {
+  releaser::loaded
 }
 # Arguments:
 #   changelog_file
-function get_last_version_from_changelog {
-  changelog_file="$1"
-  if [[ -z "${changelog_file}" ]];then
-    releaser_log_error "changelog_file not set"
-    return 1
-  fi
+function releaser::get_last_version_from_changelog {
+  local changelog_file="${1:-CHANGELOG.md}"
   if [[ ! -f "${changelog_file}" ]];then
-    releaser_log_error "${changelog_file} does not exist"
+    releaser::log_error "${changelog_file} does not exist"
     return 1
   fi
   version=$(cat $changelog_file | head -1 | grep -o -e "[0-9]*\.[0-9]*\.[0-9]*")
   if [[ "${version}" == "" ]];then
-    releaser_log_error "Could not get last version from ${changelog_file}"
+    releaser::log_error "Could not get last version from ${changelog_file}"
     return 1
   fi
   echo "${version}"
 }
+function get_last_version_from_changelog {
+  releaser::get_last_version_from_changelog ${1}
+}
 
 # This function exists, because in bash: return in the while loop scope
 # does not exit the whole function.
-function get_last_version_from_changelog_inner {
-  local changelog_file="${1}"
+function releaser::get_last_version_from_changelog_inner {
+  local changelog_file="${1:-CHANGELOG.md}"
   cat ${changelog_file} | \
   while read line; do
       version=$(echo "${line}" | grep -o -e "# [0-9]*\.[0-9]*\.[0-9]*" | grep -o -e "[0-9]*\.[0-9]*\.[0-9]*")
@@ -88,36 +110,43 @@ function get_last_version_from_changelog_inner {
       fi
   done
 }
+function get_last_version_from_changelog_inner {
+  releaser::get_last_version_from_changelog_inner ${1}
+}
 
 # Reads the changelog file line by line, finds the first line that
 # matches version patter and returns the version.
 # Arguments:
 #   changelog_file
-function get_last_version_from_whole_changelog {
+function releaser::get_last_version_from_whole_changelog {
   local changelog_file="${1:-CHANGELOG.md}"
-  if [[ -z "${changelog_file}" ]];then
-    releaser_log_error "changelog_file not set"
-    return 1
-  fi
   if [[ ! -f "${changelog_file}" ]];then
-    releaser_log_error "${changelog_file} does not exist"
+    releaser::log_error "${changelog_file} does not exist"
     return 1
   fi
-  version="$(get_last_version_from_changelog_inner ${changelog_file})"
+  version="$(releaser::get_last_version_from_changelog_inner ${changelog_file})"
   if [[ "${version}" == "" ]];then
-    releaser_log_error "No line in ${changelog_file} matches version pattern! (# [0-9]*\.[0-9]*\.[0-9]*)"
+    releaser::log_error "No line in ${changelog_file} matches version pattern! (# [0-9]*\.[0-9]*\.[0-9]*)"
     return 1
   fi
   echo "${version}"
 }
+function get_last_version_from_whole_changelog {
+  releaser::get_last_version_from_whole_changelog ${1}
+}
 # Arguments: none
-function get_last_git_tagged_version {
+function releaser::get_last_git_tagged_version {
+  set +Ee
   tag="$(git tag 2>&1 | sort -V | tail -1)"
   if [[ "${tag}" == *"Not a git repository"* ]];then
-    releaser_log_error "Not a git repository"
+    releaser::log_error "Not a git repository"
     return 1
   fi
+  set -Ee
   echo "${tag}"
+}
+function get_last_git_tagged_version {
+  releaser::get_last_git_tagged_version
 }
 
 # function from: http://stackoverflow.com/a/21189044/4457564
@@ -125,7 +154,7 @@ function get_last_git_tagged_version {
 #  * path to yml file
 #  * prefix so that imported settings all have a common prefix (which will reduce
 # the risk of namespace collisions)
-function parse_yaml {
+function releaser::parse_yaml {
    local prefix=$2
    local s='[[:space:]]*' w='[a-zA-Z0-9_]*' fs=$(echo @|tr @ '\034')
    sed -ne "s|^\($s\):|\1|" \
@@ -143,95 +172,93 @@ function parse_yaml {
 }
 # Arguments:
 #   none, but oversion.yml must exist
-function parse_oversion_file {
-  oversion_file="oversion.yml"
+function releaser::parse_oversion_file {
+  local oversion_file="oversion.yml"
   if [[ ! -f "${oversion_file}" ]];then
-    releaser_log_error "${oversion_file} does not exist"
+    releaser::log_error "${oversion_file} does not exist"
     return 1
   fi
-  releaser_log_debug "Parsing ${oversion_file}"
-  oversion_file_variables=$(parse_yaml "${oversion_file}" "OVERSION_")
+  releaser::log_debug "Parsing ${oversion_file}"
+  oversion_file_variables=$(releaser::parse_yaml "${oversion_file}" "OVERSION_")
   for oversion_file_variable in $oversion_file_variables; do
     # split the variable into name and value or else value will be quoted
     name=$(echo "${oversion_file_variable}" | cut -d '=' -f1)
     value=$(echo "${oversion_file_variable}" | cut -d '=' -f2)
     value=$(echo "$value" | sed -e 's/^"//' -e 's/"$//')
     export "${name}=${value}"
-    releaser_log_debug "Exported variable: ${name}=${value}"
+    releaser::log_debug "Exported variable: ${name}=${value}"
   done
-  releaser_log_debug "Done parsing ${oversion_file}"
+  releaser::log_debug "Done parsing ${oversion_file}"
 }
 
-function get_next_oversion {
-  parse_oversion_file
+function releaser::get_next_oversion {
+  releaser::parse_oversion_file
   exit_status="$?"
   if [[ "${exit_status}" != 0 ]]; then
     return "${exit_status}"
   fi
   if [[ "${OVERSION_backend}" == "consul" ]]; then
     if [[ -z "${OVERSION_consul_url}" ]]; then
-      releaser_log_error "OVERSION_consul_url not set, set consul_url in oversion file"
+      releaser::log_error "OVERSION_consul_url not set, set consul_url in oversion file"
       return 1
     fi
     if [[ -z "${OVERSION_project_name}" ]]; then
-      releaser_log_error "OVERSION_project_name not set, set project_name in oversion file"
+      releaser::log_error "OVERSION_project_name not set, set project_name in oversion file"
       return 1
     fi
     full_url="${OVERSION_consul_url}/v1/kv/projects/${OVERSION_project_name}/next_version?raw"
     next_version=$(curl -X GET --silent ${full_url})
     if [[ "${next_version}" == "" ]]; then
-      releaser_log_error "Could not get next_version from Consul for ${OVERSION_project_name}. Is it set? Is curl installed?"
+      releaser::log_error "Could not get next_version from Consul for ${OVERSION_project_name}. Is it set? Is curl installed?"
       return 1
     fi
-    releaser_log_info "Got next_version from Consul for ${OVERSION_project_name}: ${next_version}"
+    releaser::log_info "Got next_version from Consul for ${OVERSION_project_name}: ${next_version}"
   else
-    releaser_log_error "Not supported backend: ${OVERSION_backend}"
+    releaser::log_error "Not supported backend: ${OVERSION_backend}"
     return 1
   fi
   echo "${next_version}"
 }
+function get_next_oversion {
+  releaser::get_next_oversion
+}
 # Arguments:
 #  * next_version
-function set_next_oversion {
-  next_version="$1"
-  if [[ -z "${next_version}" ]]; then
-    releaser_log_error "next_version not set"
-    return 1
-  fi
-  parse_oversion_file
+function releaser::set_next_oversion {
+  local next_version="${1?next_version not set}"
+  releaser::parse_oversion_file
   if [[ "${OVERSION_backend}" == "consul" ]]; then
     if [[ -z "${OVERSION_consul_url}" ]]; then
-      releaser_log_error "OVERSION_consul_url not set, set consul_url in oversion file"
+      releaser::log_error "OVERSION_consul_url not set, set consul_url in oversion file"
       return 1
     fi
     if [[ -z "${OVERSION_project_name}" ]]; then
-      releaser_log_error "OVERSION_project_name not set, set project_name in oversion file"
+      releaser::log_error "OVERSION_project_name not set, set project_name in oversion file"
       return 1
     fi
     full_url="${OVERSION_consul_url}/v1/kv/projects/${OVERSION_project_name}/next_version"
-    releaser_log_info "Set next_version into Consul for ${OVERSION_project_name}: ${next_version}"
+    releaser::log_info "Set next_version into Consul for ${OVERSION_project_name}: ${next_version}"
     output=$(curl -X PUT --silent --data ${next_version} ${full_url})
     if [[ "${output}" != "true" ]]; then
-      releaser_log_error "Could not set next_version into Consul for ${OVERSION_project_name}."
+      releaser::log_error "Could not set next_version into Consul for ${OVERSION_project_name}."
       return 1
     fi
   else
-    releaser_log_error "Not supported backend: ${OVERSION_backend}"
+    releaser::log_error "Not supported backend: ${OVERSION_backend}"
     return 1
   fi
+}
+function set_next_oversion {
+  releaser::set_next_oversion "${1}"
 }
 # Given the old_version in a SemVer format, e.g. 0.1.2, returns new version
 # with patch fragment increased by 1, e.g. 0.1.3.
 # Arguments:
 #   old_version
-function bump_patch_version {
-  old_version="$1"
-  if [[ -z "${old_version}" ]];then
-    releaser_log_error "old_version not set"
-    return 1
-  fi
-  releaser_log_debug "Validating old_version"
-  validate_version_is_semver "${old_version}"
+function releaser::bump_patch_version {
+  local old_version="${1?old_version not set}"
+  releaser::log_debug "Validating old_version"
+  releaser::validate_version_is_semver "${old_version}"
   exit_status="$?"
   if [[ "${exit_status}" != 0 ]]; then
     return "${exit_status}"
@@ -246,18 +273,20 @@ function bump_patch_version {
   patch=$((patch+1))
   echo "${major}.${minor}.${patch}"
 }
+function bump_patch_version {
+  releaser::bump_patch_version ${1}
+}
 # Arguments:
 #   * version
-function validate_version_is_semver {
-  version="$1"
-  if [[ -z "${version}" ]];then
-    releaser_log_error "version not set"
-    return 1
-  fi
+function releaser::validate_version_is_semver {
+  local version="${1?version not set}"
   if [[ ! "${version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+ ]]; then
-    releaser_log_error "Version was not SemVer. It was: ${version}. Must be e.g. 0.1.2"
+    releaser::log_error "Version was not SemVer. It was: ${version}. Must be e.g. 0.1.2"
     return 1
   fi
+}
+function validate_version_is_semver {
+  releaser::validate_version_is_semver ${1}
 }
 
 # Replaces the whole line in a version file with that line and adds new version.
@@ -265,33 +294,23 @@ function validate_version_is_semver {
 #   line_pattern
 #   new_version
 #   version_file
-function set_version_in_file {
-  line_pattern="$1"
-  version_file="$2"
-  new_version="$3"
-
-  if [[ -z "${line_pattern}" ]];then
-    releaser_log_error "line_pattern not set"
-    return 1
-  fi
-  if [[ -z "${new_version}" ]];then
-    releaser_log_error "new_version not set"
-    return 1
-  fi
-  if [[ -z "${version_file}" ]];then
-    releaser_log_error "version_file not set"
-    return 1
-  fi
+function releaser::set_version_in_file {
+  local line_pattern="${1?line_pattern not set}"
+  local version_file="${2?version_file not set}"
+  local new_version="${3?new_version not set}"
   if [[ ! -f "${version_file}" ]];then
-    releaser_log_error "${version_file} does not exist"
+    releaser::log_error "${version_file} does not exist"
     return 1
   fi
   new_versionfile_contents=$(sed "s/${line_pattern}.*/${line_pattern}\"${new_version}\"/g" ${version_file})
-  releaser_log_debug "Will replace version file with:"
-  releaser_log_debug "${new_versionfile_contents}"
+  releaser::log_debug "Will replace version file with:"
+  releaser::log_debug "${new_versionfile_contents}"
   if [[ "${dryrun}" != "true" ]];then
     echo "${new_versionfile_contents}" > "${version_file}"
   fi
+}
+function set_version_in_file {
+  releaser::set_version_in_file "$1" "$2" "$3"
 }
 
 # Takes care of the first line of changelog file.
@@ -317,26 +336,18 @@ function set_version_in_file {
 # Arguments:
 #   new_version
 #   changelog_file
-function set_version_in_changelog {
-  changelog_file="$1"
-  new_version="$2"
+function releaser::set_version_in_changelog {
+  local changelog_file="${1:-CHANGELOG.md}"
+  local new_version="${2?new_version not set}"
 
-  if [[ -z "${new_version}" ]];then
-    releaser_log_error "new_version not set"
-    return 1
-  fi
-  if [[ -z "${changelog_file}" ]];then
-    releaser_log_error "changelog_file not set"
-    return 1
-  fi
   if [[ ! -f "${changelog_file}" ]];then
-    releaser_log_error "${changelog_file} does not exist"
+    releaser::log_error "${changelog_file} does not exist"
     return 1
   fi
 
   changelog_first_line=$(cat ${changelog_file} | head -1)
   if [[ "${changelog_first_line}" == "### "*"Unreleased" ]];then
-    releaser_log_debug "Setting data in changelog from Unreleased"
+    releaser::log_debug "Setting data in changelog from Unreleased"
     release_date=$(LANG=en_US date +%Y-%b-%d)
     new_line="### ${new_version} (${release_date})"
     new_changelog_contents=$(sed "s/### .*Unreleased/${new_line}/g" ${changelog_file})
@@ -346,13 +357,13 @@ function set_version_in_changelog {
     return $?
   elif [[ "${changelog_first_line}" == "### ${new_version} "* ]];then
     # idempotent
-    releaser_log_debug "Version in changelog is already set"
+    releaser::log_debug "Version in changelog is already set"
     return 0
   else
-    releaser_log_debug "Will add new line to changelog:"
+    releaser::log_debug "Will add new line to changelog:"
     release_date=$(LANG=en_US date +%Y-%b-%d)
     new_line="### ${new_version} (${release_date})"
-    releaser_log_debug "${new_line}"
+    releaser::log_debug "${new_line}"
     if [[ "${dryrun}" != "true" ]];then
       old_changelog=$(cat "${changelog_file}")
       echo "${new_line}" > "${changelog_file}"
@@ -364,106 +375,112 @@ function set_version_in_changelog {
     fi
   fi
 }
+function set_version_in_changelog {
+  releaser::set_version_in_changelog "$1" "$2"
+}
 
-function publish_to_archive {
-  endpoint_directory_name="$1"
-  version="$2"
-  file_to_publish="$3"
+function releaser::publish_to_archive {
+  local endpoint_directory_name="${1?endpoint_directory_name not set}"
+  local version="${2?version not set}"
+  local file_to_publish="${3?file_to_publish not set}"
 
-  if [[ -z "${endpoint_directory_name}" ]];then
-    releaser_log_error "endpoint_directory_name not set"
-    return 1
-  fi
-  if [[ -z "${version}" ]];then
-    releaser_log_error "version not set"
-    return 1
-  fi
-  if [[ -z "${file_to_publish}" ]];then
-    releaser_log_error "file_to_publish not set"
-    return 1
-  fi
   if [[ ! -f "${file_to_publish}" ]];then
-    releaser_log_error "${file_to_publish} does not exist"
+    releaser::log_error "${file_to_publish} does not exist"
     return 1
   fi
 
-  initial_dir="$(pwd)"
+  local initial_dir="$(pwd)"
   mkdir -p "/tmp/releaser-${endpoint_directory_name}/${version}"
   cp -r "${file_to_publish}" "/tmp/releaser-${endpoint_directory_name}/${version}"
   cd "/tmp/releaser-${endpoint_directory_name}"
   if [[ "${dryrun}" != "true" ]];then
     rsync -avrR "./${version}"  "rsync://rsync.archive.ai-traders.com/archive/${endpoint_directory_name}"
   fi
-  releaser_log_info "Published into rsync://rsync.archive.ai-traders.com/archive/${endpoint_directory_name}/${version}"
+  releaser::log_info "Published into rsync://rsync.archive.ai-traders.com/archive/${endpoint_directory_name}/${version}"
   cd "${initial_dir}"
   rm -r "/tmp/releaser-${endpoint_directory_name}"
+}
+function publish_to_archive {
+  releaser::publish_to_archive $1 $2 $3
 }
 
 ################################################################################
 # The End user functions here:
-#  * use default values set in releaser_init function
+#  * use default values set in the bottom of releaser
 ################################################################################
 
-# You should invoke that function before running any end user functions.
+# obsolete function
 function releaser_init {
-  default_changelog_file="$(pwd)/CHANGELOG.md"
-  changelog_file="${changelog_file:-${default_changelog_file}}"
-  releaser_log_info "Current directory: $(pwd)"
-  releaser_log_debug "Changelog file: ${changelog_file}"
+  releaser::log_warn "Using obsolete function: releaser_init"
 }
 
 # Test that the version was not already released.
-function verify_version_not_released_before {
-  version_from_changelog=$(get_last_version_from_changelog "${changelog_file}")
+function releaser::verify_version_not_released_before {
+  version_from_changelog=$(releaser::get_last_version_from_changelog "${changelog_file}")
   if git tag | grep "${version_from_changelog}"; then
-    releaser_log_error "The last version from changelog was already git tagged: ${version_from_changelog}"
+    releaser::log_error "The last version from changelog was already git tagged: ${version_from_changelog}"
     exit 1
   fi
-  version_from_oversion=$(get_next_oversion)
+  version_from_oversion=$(releaser::get_next_oversion)
   if git tag | grep "${version_from_oversion}"; then
-    releaser_log_error "The last version from oversion was already git tagged: ${version_from_oversion}"
+    releaser::log_error "The last version from oversion was already git tagged: ${version_from_oversion}"
     exit 1
   fi
-  releaser_log_info "Version was not released before"
+  releaser::log_info "Version was not released before"
+}
+function verify_version_not_released_before {
+  releaser::verify_version_not_released_before
+}
+function releaser::verify_version_in_changelog_matches_in_oversion {
+  if [[ "${version_from_changelog}" != "${version_from_oversion}" ]]; then
+    releaser::log_error "version_from_changelog: ${version_from_changelog} != version_from_oversion: ${version_from_oversion}"
+    exit 1
+  fi
+  releaser::log_info "Version in changelog matches version in OVersion"
 }
 function verify_version_in_changelog_matches_in_oversion {
-  if [[ "${version_from_changelog}" != "${version_from_oversion}" ]]; then
-    releaser_log_error "version_from_changelog: ${version_from_changelog} != version_from_oversion: ${version_from_oversion}"
-    exit 1
-  fi
-  releaser_log_info "Version in changelog matches version in OVersion"
+  releaser::verify_version_in_changelog_matches_in_oversion
 }
 # This function should be used in any project that does not use version file,
 # e.g. ide docker image.
+function releaser::verify_version_for_release {
+  releaser::verify_version_not_released_before
+  releaser::verify_version_in_changelog_matches_in_oversion
+  changelog_first_line=$(cat ${changelog_file} | head -1)
+  if [[ "${changelog_first_line}" == "#"*"Unreleased"* ]] || [[ "${changelog_first_line}" == "#"*"unreleased"* ]] || [[ "${changelog_first_line}" == "#"*"UNRELEASED"* ]];then
+    releaser::log_error "Top of changelog has 'Unreleased' flag"
+    exit 1
+  fi
+  releaser::log_info "Version verified successfully"
+}
 function verify_version_for_release {
-  verify_version_not_released_before
-  verify_version_in_changelog_matches_in_oversion
-  changelog_first_line=$(cat ${changelog_file} | head -1)
-  if [[ "${changelog_first_line}" == "#"*"Unreleased"* ]] || [[ "${changelog_first_line}" == "#"*"unreleased"* ]] || [[ "${changelog_first_line}" == "#"*"UNRELEASED"* ]];then
-    releaser_log_error "Top of changelog has 'Unreleased' flag"
-    exit 1
-  fi
-  releaser_log_info "Version verified successfully"
+  releaser::verify_version_for_release
 }
 
-function verify_changelog_version {
-  version=$(get_last_version_from_changelog "${changelog_file}")
+function releaser::verify_changelog_version {
+  version=$(releaser::get_last_version_from_changelog "${changelog_file}")
   if git tag | grep "${version}"; then
-    releaser_log_error "The last version from changelog was already git tagged: ${version}"
+    releaser::log_error "The last version from changelog was already git tagged: ${version}"
     exit 1
   fi
-  validate_version_is_semver "${version}"
+  releaser::validate_version_is_semver "${version}"
   changelog_first_line=$(cat ${changelog_file} | head -1)
   if [[ "${changelog_first_line}" == "#"*"Unreleased"* ]] || [[ "${changelog_first_line}" == "#"*"unreleased"* ]] || [[ "${changelog_first_line}" == "#"*"UNRELEASED"* ]];then
-    releaser_log_error "Top of changelog has 'Unreleased' flag"
+    releaser::log_error "Top of changelog has 'Unreleased' flag"
     exit 1
   fi
-  releaser_log_info "Changelog version verified successfully"
+  releaser::log_info "Changelog version verified successfully"
+}
+function verify_changelog_version {
+  releaser::verify_changelog_version
 }
 
-function git_tag_from_oversion {
-  new_version="$(get_next_oversion)"
+function releaser::git_tag_from_oversion {
+  new_version="$(releaser::get_next_oversion)"
   git tag "${new_version}" && git push origin "${new_version}"
+}
+function git_tag_from_oversion {
+  releaser::git_tag_from_oversion
 }
 # This function:
 #  * bumps version in changelog: it adds a newline and a line with date
@@ -473,65 +490,68 @@ function git_tag_from_oversion {
 # function.
 # Arguments:
 #  * new version - optional, if not set, then patch version will be bumped by 1
-function bump_changelog_and_oversion {
+function releaser::bump_changelog_and_oversion {
   new_version="$1"
   if [[ -z "${new_version}" ]];then
     # get next_version from Consul, which was last released
-    old_version="$(get_next_oversion)"
-    new_version="$(bump_patch_version ${old_version})"
+    old_version="$(releaser::get_next_oversion)"
+    new_version="$(releaser::bump_patch_version ${old_version})"
   fi
-  releaser_log_debug "Validating new_version"
-  validate_version_is_semver "${new_version}"
-  releaser_log_info "New version will be: ${new_version}"
-  set_version_in_changelog "${changelog_file}" "${new_version}"
-  releaser_log_info "Bumped to ${new_version} in ${changelog_file}"
+  releaser::log_debug "Validating new_version"
+  releaser::validate_version_is_semver "${new_version}"
+  releaser::log_info "New version will be: ${new_version}"
+  releaser::set_version_in_changelog "${changelog_file}" "${new_version}"
+  releaser::log_info "Bumped to ${new_version} in ${changelog_file}"
   # set it in Consul
-  set_next_oversion "${new_version}"
+  releaser::set_next_oversion "${new_version}"
 }
-function bump_changelog_version {
+function bump_changelog_and_oversion {
+  releaser::bump_changelog_and_oversion $1
+}
+function releaser::bump_changelog_version {
   next_version="$1"
   if [[ -n "${next_version}" ]];then
     echo "Version explicitly set to: ${next_version}"
   else
-    last_version=$(get_last_version_from_changelog "${changelog_file}")
-    next_version=$(bump_patch_version "${last_version}")
+    last_version=$(releaser::get_last_version_from_changelog "${changelog_file}")
+    next_version=$(releaser::bump_patch_version "${last_version}")
     echo "Version patch number bumped based on last changelog version. Version set to: ${next_version}"
   fi
-  set_version_in_changelog "${changelog_file}" "${next_version}"
+  releaser::set_version_in_changelog "${changelog_file}" "${next_version}"
   echo "Bumped to ${next_version}"
+}
+function bump_changelog_version {
+  releaser::bump_changelog_version $1
 }
 
 ################################################################################
 # Common for ide k8s chart project type
 ################################################################################
 
-function get_chart_version {
-  version_file="$1"
-  if [[ -z "${version_file}" ]];then
-    releaser_log_error "version_file not set"
-    return 1
-  fi
-
+function releaser::get_chart_version {
+  local version_file="${1?version_file not set}"
   cat "${version_file}" | grep "version" | grep -o -e "[0-9]*\.[0-9]*\.[0-9]*"
 }
-function bump_chart_version {
-  version_file="$1"
-  new_version="$2"
+function get_chart_version {
+  releaser::get_chart_version $1
+}
+function releaser::bump_chart_version {
+  local version_file="${1?version_file not set}"
+  local new_version="$2"
   if [[ -z "${new_version}" ]];then
     # get next_version from Consul, which was last released
-    old_version="$(get_next_oversion)"
-    new_version="$(bump_patch_version ${old_version})"
+    old_version="$(releaser::get_next_oversion)"
+    new_version="$(releaser::bump_patch_version ${old_version})"
   fi
 
-  set_version_in_file "version: " "${version_file}" "${new_version}"
-  releaser_log_info "Bumped to ${new_version} in ${version_file}"
+  releaser::set_version_in_file "version: " "${version_file}" "${new_version}"
+  releaser::log_info "Bumped to ${new_version} in ${version_file}"
 }
-function verify_version_not_released_chart {
-  version_file="$1"
-  if [[ -z "${version_file}" ]];then
-    releaser_log_error "version_file not set"
-    return 1
-  fi
+function bump_chart_version {
+  releaser::bump_chart_version $1 $2
+}
+function releaser::verify_version_not_released_chart {
+  local version_file="${1?version_file not set}"
 
   chart_version="$(get_chart_version ${version_file})"
   if [[ $(git tag | grep "${chart_version}" -c) -ne 0 ]]; then
@@ -549,4 +569,7 @@ function verify_version_not_released_chart {
     echo "chart_version: ${chart_version} != changelog_version: ${changelog_version}"
     exit 1
   fi
+}
+function verify_version_not_released_chart {
+  releaser::verify_version_not_released_chart $1
 }
