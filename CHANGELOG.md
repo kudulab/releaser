@@ -1,3 +1,5 @@
+### 1.1.0 (2019-Feb-02)
+
 * no need for releaser_init anymore
 * each function now starts with `releaser::` (old function names preserved too)
 
