@@ -7,11 +7,10 @@ source ${releaser}
 command="$1"
 case "${command}" in
   set_version)
-      releaser::bump_changelog_and_oversion "${2}"
+      releaser::bump_changelog_version "${2}" "${3}"
       exit $?
       ;;
   verify_version)
-      releaser::verify_version_in_changelog_matches_in_oversion
       releaser::verify_version_not_released_before
       exit $?
       ;;
@@ -22,7 +21,7 @@ case "${command}" in
       ;;
   release)
       releaser::verify_version_for_release
-      releaser::git_tag_from_oversion
+      releaser::git_tag_from_changelog
       exit $?
       ;;
   *)

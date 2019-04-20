@@ -1,3 +1,10 @@
+### 2.0.0 - Unreleased
+
+Breaking changes as part of public publishing \#17555
+ * deleted functions without `releaser::` prefix
+ * drops oversion support
+ * enhanced tests and implementation
+
 ### 1.1.0 (2019-Feb-02)
 
 * no need for releaser_init anymore

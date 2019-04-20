@@ -8,31 +8,26 @@ set -e
 command="$1"
 case "${command}" in
   set_version)
-      releaser::bump_changelog_and_oversion "$2"
-      exit $?
+      releaser::bump_changelog_version "$2" "$3"
       ;;
   verify_version)
       releaser::verify_version_for_release
-      exit $?
       ;;
   unit)
       time bats ./test/unit/*.bats
-      exit $?
       ;;
   itest)
       time bats ./test/integration/*.bats
-      exit $?
       ;;
   release)
       releaser::verify_version_for_release
       releaser::git_tag_from_oversion
-      exit $?
       ;;
   publish)
       # publish the just released version
       version=$(releaser::get_last_git_tagged_version)
-      releaser::publish_to_archive "releaser" "${version}" "src/releaser"
-      exit $?
+      echo "Not impl"
+      exit 2
       ;;
   *)
       echo "Invalid command: '${command}'"
