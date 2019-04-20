@@ -31,10 +31,13 @@ To validate that releaser functions are loaded use: `releaser_loaded` function
 or any other releaser function, e.g.: `get_next_oversion`.
 
 ### Dependencies
+
+Following should suffice:
 * Bash
 * Curl
 * Ssh client
-* Rsync (for publish_to_archive)
+
+A complete setup, which is actually tested is specified by [ops-base](https://github.com/kudulab/ops-base).
 
 ### Alpine
 If using releaser on Alpine, please run:

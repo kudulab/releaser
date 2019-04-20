@@ -6,6 +6,8 @@ RELEASER_LOG_LEVEL=${RELEASER_LOG_LEVEL:-info}
 dryrun="${dryrun:-false}"
 changelog_file="${changelog_file:-CHANGELOG.md}"
 
+RELEASER_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
 ################################################################################
 # Generally:
 # * Each log output goes to stderrr, so that we can return value from functions
@@ -287,6 +289,26 @@ function releaser::bump_changelog_version {
   releaser::log_info "New version will be: ${new_version}"
   releaser::set_version_in_changelog "${changelog_file}" "${new_version}" "${unreleased}"
   releaser::log_info "Bumped to ${new_version} in ${changelog_file}"
+}
+
+################################################################################
+# Github releases
+################################################################################
+
+function releaser::prepare_github_release_bin {
+  GITHUB_RELEASER_VERSION="0.7.2"
+
+  if [ -z "$GITHUB_TOKEN" ]; then
+      echo "GITHUB_TOKEN is unset";
+      exit 1;
+  fi
+  cd $RELEASER_DIR
+  if [ ! -f linux-amd64-github-release.tar.bz2 ]; then
+      wget https://github.com/aktau/github-release/releases/download/v${GITHUB_RELEASER_VERSION}/linux-amd64-github-release.tar.bz2 -O linux-amd64-github-release.tar.bz2
+  fi
+  tar xf linux-amd64-github-release.tar.bz2
+  export GHRELEASE_BIN="$RELEASER_DIR/bin/linux/amd64/github-release"
+  cd -
 }
 
 ################################################################################

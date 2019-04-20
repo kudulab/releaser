@@ -21,13 +21,25 @@ case "${command}" in
       ;;
   release)
       releaser::verify_version_for_release
-      releaser::git_tag_from_oversion
+      releaser::git_tag_from_changelog
       ;;
   publish)
       # publish the just released version
-      version=$(releaser::get_last_git_tagged_version)
-      echo "Not impl"
-      exit 2
+      VERSION=$(releaser::get_last_git_tagged_version)
+      releaser::prepare_github_release_bin
+      $GHRELEASE_BIN release \
+        --user kudulab \
+        --repo releaser \
+        --tag $VERSION \
+        --name $VERSION \
+        --pre-release
+
+      $GHRELEASE_BIN upload \
+        --user kudulab \
+        --repo releaser \
+        --tag $VERSION \
+        --name "releaser" \
+        --file src/releaser
       ;;
   *)
       echo "Invalid command: '${command}'"

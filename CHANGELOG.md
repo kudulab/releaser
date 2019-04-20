@@ -1,4 +1,4 @@
-### 2.0.0 - Unreleased
+### 2.0.0 (2019-Apr-20)
 
 Breaking changes as part of public publishing \#17555
  * deleted functions without `releaser::` prefix
