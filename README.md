@@ -17,13 +17,18 @@ releaser::loaded || eval "$(curl http://archive.ai-traders.com/releaser/1.1.0/re
 If you want to run releaser from a script:
 ```bash
 set -Eeuo pipefail
-if [[ ! -f ./releaser ]]; then
-  wget --quiet http://http.archive.ai-traders.com/releaser/1.1.0/releaser || { echo "Cannot download releaser, ignoring."; }
+
+RELEASER_VERSION="2.0.0"
+RELEASER_FILE=".ops/releaser-${RELEASER_VERSION}"
+
+mkdir -p .ops
+if [[ ! -f $RELEASER_FILE ]];then
+  wget --quiet -O $RELEASER_FILE https://github.com/kudulab/releaser/releases/download/${RELEASER_VERSION}/releaser
 fi
-if [[ -f ./releaser ]]; then
-  source ./releaser
-fi
+source $RELEASER_FILE
 ```
+
+Your `.gitignore` should include `.ops/`.
 
 ### Validate that loaded
 

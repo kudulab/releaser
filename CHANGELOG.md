@@ -1,3 +1,7 @@
+### 2.0.1 (2019-Apr-21)
+
+ * minor fixes - added test task for itests with ops-base \#17556
+
 ### 2.0.0 (2019-Apr-20)
 
 Breaking changes as part of public publishing \#17555

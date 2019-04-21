@@ -19,6 +19,10 @@ case "${command}" in
   itest)
       time bats ./test/integration/*.bats
       ;;
+  test)
+      ./tasks unit
+      ./tasks itest
+      ;;
   release)
       releaser::verify_version_for_release
       releaser::git_tag_from_changelog
