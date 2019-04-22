@@ -45,6 +45,8 @@ pipelines:
           jobs:
             code:
               elastic_profile_id: w.c1.m1024.e5
+              secure_variables:
+                VAULT_TOKEN: "AES:gcM0QI+XJzrVTkxHwGAfwg==:ZL2AWR5HC5fMZ/UTJMMf2FmmJx8c8NrEUac7o3F4MObejTHYw8T8nymFQCvgFrci"
               tasks:
                 - exec:
                     command: /bin/bash
