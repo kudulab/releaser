@@ -1,4 +1,0 @@
----
-backend: 'consul'
-project_name: 'releaser'
-consul_url: 'http://consul.ai-traders.com:8500'

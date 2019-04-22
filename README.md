@@ -8,7 +8,7 @@ All the releaser functions are available after you install it.
 ### In current shell
 If you want to run releaser in current shell:
 ```bash
-releaser::loaded || eval "$(curl http://archive.ai-traders.com/releaser/1.1.0/releaser)"
+releaser::loaded || eval "$(curl https://github.com/kudulab/releaser/releases/download/${RELEASER_VERSION}/releaser)"
 ```
  Do not use it in a script as it would always redownload the file.
 
@@ -29,11 +29,6 @@ source $RELEASER_FILE
 ```
 
 Your `.gitignore` should include `ops/`.
-
-### Validate that loaded
-
-To validate that releaser functions are loaded use: `releaser_loaded` function
-or any other releaser function, e.g.: `get_next_oversion`.
 
 ### Dependencies
 
@@ -58,18 +53,10 @@ Provide `./tasks` file with bash `case` (switch). It will allow to run
 ```bash
 #!/bin/bash
 
-set -Eeuo pipefail
-if [[ ! -f ./releaser ]]; then
-  wget --quiet http://http.archive.ai-traders.com/releaser/1.1.0/releaser || { echo "Cannot download releaser, ignoring."; }
-fi
-if [[ -f ./releaser ]]; then
-  source ./releaser
-fi
-
 command="$1"
 case "${command}" in
   set_version)
-      releaser::bump_changelog_and_oversion "$2"
+      releaser::bump_changelog_version "$2"
       exit $?
       ;;
   verify)
@@ -111,24 +98,6 @@ You can set those environment variables:
 ### Implementation details
 Releaser code consists of bash functions. They allow each project type for custom release cycle.
 
-#### Version bump
-Any project should keep version in Changelog and in OVersion backend.
-We treat version set in OVersion backend (usually Consul) as the only truth
- version in the moment. You should be able to run
-   * `./tasks set_version` to bump the path version string fragment
-   * `./tasks set_version 3.44.12` to bump to any version string you want
-
-Get version from OVersion backend:
-```
-next_version=$(source releaser && releaser::get_next_oversion)
-echo "${next_version}"
-```
-
-Set version into OVersion backend:
-```
-source releaser && set_next_oversion 0.2.4
-```
-
 ## Development
 1. You make changes in a feature branch and git push it.
 1. You run tests:
@@ -136,8 +105,6 @@ source releaser && set_next_oversion 0.2.4
    * `./tasks itest`
 1. You decide that it is time for GoCD to test and release your code, so you locally:
     * run `./tasks set_version` to bump the patch version fragment by 1 or
-    `./tasks set_version 1.2.3` to bump to a particular version. Version is bumped in Changelog and OVersion backend.
+    `./tasks set_version 1.2.3` to bump to a particular version. Version is bumped in the CHANGELOG.md.
     * merge that branch into master and push to git server
 1. CI pipeline tests and releases releaser.
-
-Releaser uses itself, which is treated as true integration test.
