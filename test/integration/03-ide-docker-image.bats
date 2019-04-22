@@ -98,7 +98,7 @@ teardown() {
   # we pretend that 0.1.0 was already released and next version is 0.1.1 (not released)
   run /bin/bash -c "cd ${ide_docker_image_dir} && git init && git add --all && git commit -m first && git tag 0.1.0 && ./tasks verify_version_for_release"
   echo "output: ${output}"
-  assert_output --partial "Version verified successfully"
+  assert_output --partial "Version was not released before"
   assert_equal "$status" 0
 }
 @test "verify_version returns 1 when changelog first line contains string: 'Unreleased'" {

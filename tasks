@@ -22,7 +22,7 @@ case "${command}" in
       releaser::bump_changelog_version "$2" "$3"
       ;;
   verify_version)
-      releaser::verify_version_for_release
+      releaser::verify_release_ready
       ;;
   unit)
       time bats ./test/unit/*.bats
@@ -35,7 +35,7 @@ case "${command}" in
       ./tasks itest
       ;;
   release)
-      releaser::verify_version_for_release
+      releaser::verify_release_ready
       releaser::git_tag_from_changelog
       ;;
   publish)
@@ -48,8 +48,7 @@ case "${command}" in
         --user kudulab \
         --repo releaser \
         --tag $VERSION \
-        --name $VERSION \
-        --pre-release
+        --name $VERSION
 
       $GHRELEASE_BIN upload \
         --user kudulab \

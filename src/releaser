@@ -243,24 +243,8 @@ function releaser::verify_version_not_released_before {
   fi
   releaser::log_info "Version was not released before"
 }
-# This function should be used in any project that does not use version file,
-# e.g. ide docker image.
-function releaser::verify_version_for_release {
-  releaser::verify_version_not_released_before
-  changelog_first_line=$(cat ${changelog_file} | head -1)
-  if [[ "${changelog_first_line}" == "#"*"Unreleased"* ]] || [[ "${changelog_first_line}" == "#"*"unreleased"* ]] || [[ "${changelog_first_line}" == "#"*"UNRELEASED"* ]];then
-    releaser::log_error "Top of changelog has 'Unreleased' flag"
-    exit 1
-  fi
-  releaser::log_info "Version verified successfully"
-}
-
-function releaser::verify_changelog_version {
+function releaser::verify_changelog {
   version=$(releaser::get_last_version_from_changelog "${changelog_file}")
-  if git tag | grep "${version}"; then
-    releaser::log_error "The last version from changelog was already git tagged: ${version}"
-    exit 1
-  fi
   releaser::validate_version_is_semver "${version}"
   changelog_first_line=$(cat ${changelog_file} | head -1)
   if [[ "${changelog_first_line}" == "#"*"Unreleased"* ]] || [[ "${changelog_first_line}" == "#"*"unreleased"* ]] || [[ "${changelog_first_line}" == "#"*"UNRELEASED"* ]];then
@@ -268,6 +252,12 @@ function releaser::verify_changelog_version {
     exit 1
   fi
   releaser::log_info "Changelog version verified successfully"
+}
+# Verifies changelog content, versions and git tags
+# Passes only when current repository is ready to run a release
+function releaser::verify_release_ready {
+  releaser::verify_changelog
+  releaser::verify_version_not_released_before
 }
 # This function:
 #  * bumps version in changelog: it adds a newline and a line with date
@@ -301,7 +291,7 @@ function releaser::conditional_release {
     releaser::log_info "Current commit is already tagged, skipping code release"
   else
     releaser::log_info "Current commit has no tags, starting code release..."
-    releaser::verify_version_for_release
+    releaser::verify_release_ready
     releaser::git_tag_from_changelog
   fi
 }

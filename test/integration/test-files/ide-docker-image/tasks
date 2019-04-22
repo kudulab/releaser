@@ -16,11 +16,11 @@ case "${command}" in
       ;;
   verify_version_for_release)
       # this task is for testing purposes only, do not treat as example
-      releaser::verify_version_for_release
+      releaser::verify_release_ready
       exit $?
       ;;
   release)
-      releaser::verify_version_for_release
+      releaser::verify_release_ready
       releaser::git_tag_from_changelog
       exit $?
       ;;

@@ -60,7 +60,7 @@ case "${command}" in
       exit $?
       ;;
   verify)
-      releaser::verify_version_for_release
+      releaser::verify_release_ready
       exit $?
       ;;
   unit)

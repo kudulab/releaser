@@ -1,3 +1,8 @@
+### 2.1.0 (2019-Apr-22)
+
+ * make function names clearer
+ * rename `verify_version_for_release` to `verify_release_ready`
+
 ### 2.0.2 (2019-Apr-22)
 
  * added `releaser::conditional_release`
