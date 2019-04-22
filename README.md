@@ -19,16 +19,16 @@ If you want to run releaser from a script:
 set -Eeuo pipefail
 
 RELEASER_VERSION="2.0.0"
-RELEASER_FILE=".ops/releaser-${RELEASER_VERSION}"
+RELEASER_FILE="ops/releaser-${RELEASER_VERSION}"
 
-mkdir -p .ops
+mkdir -p ops
 if [[ ! -f $RELEASER_FILE ]];then
   wget --quiet -O $RELEASER_FILE https://github.com/kudulab/releaser/releases/download/${RELEASER_VERSION}/releaser
 fi
 source $RELEASER_FILE
 ```
 
-Your `.gitignore` should include `.ops/`.
+Your `.gitignore` should include `ops/`.
 
 ### Validate that loaded
 
