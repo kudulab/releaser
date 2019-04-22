@@ -1,3 +1,7 @@
+### 2.0.2 (2019-Apr-22)
+
+ * added `releaser::conditional_release`
+
 ### 2.0.1 (2019-Apr-21)
 
  * minor fixes - added test task for itests with ops-base \#17556

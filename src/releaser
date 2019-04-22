@@ -291,6 +291,21 @@ function releaser::bump_changelog_version {
   releaser::log_info "Bumped to ${new_version} in ${changelog_file}"
 }
 
+# Performs git tag and git pushes the tag
+# but only if current commit wasn't tagged yet
+function releaser::conditional_release {
+  # conditional release
+  git fetch origin
+  current_commit_git_tags=$(git tag -l --points-at HEAD)
+  if [[ "${current_commit_git_tags}" != "" ]];then
+    releaser::log_info "Current commit is already tagged, skipping code release"
+  else
+    releaser::log_info "Current commit has no tags, starting code release..."
+    releaser::verify_version_for_release
+    releaser::git_tag_from_changelog
+  fi
+}
+
 ################################################################################
 # Github releases
 ################################################################################
