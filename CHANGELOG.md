@@ -1,3 +1,8 @@
+### 2.1.1 (2019-Apr-23)
+
+ * updated readme
+ * added license notes
+
 ### 2.1.0 (2019-Apr-22)
 
  * make function names clearer
