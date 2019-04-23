@@ -1,3 +1,4 @@
+format_version: 3
 pipelines:
   releaser:
     group: platform
