@@ -1,3 +1,7 @@
+### 2.1.2 (2019-May-08)
+
+* add `releaser::conditional_verify`
+
 ### 2.1.1 (2019-Apr-23)
 
  * updated readme
