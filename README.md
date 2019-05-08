@@ -75,16 +75,13 @@ Provide `./tasks` file with bash `case` (switch). It will allow to run
 command="$1"
 case "${command}" in
   set_version)
-      releaser::bump_changelog_version "$2"
-      exit $?
+      releaser::bump_changelog_version "$2" "$3"
       ;;
   verify)
       releaser::verify_release_ready
-      exit $?
       ;;
   unit)
       time bats ./test/unit/*.bats
-      exit $?
       ;;
   *)
       echo "Invalid command: '${command}'"
