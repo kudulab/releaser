@@ -304,6 +304,20 @@ function releaser::conditional_release {
   fi
 }
 
+# Invokes: releaser::verify_release_ready
+# but only if current commit wasn't tagged yet
+function releaser::conditional_verify {
+  # conditional verify
+  git fetch origin
+  current_commit_git_tags=$(git tag -l --points-at HEAD)
+  if [[ "${current_commit_git_tags}" != "" ]];then
+     releaser::log_info "Current commit is already tagged, skipping verify"
+  else
+     releaser::log_info "Current commit has no tags, starting verification..."
+     releaser::verify_release_ready
+  fi
+}
+
 ################################################################################
 # Github releases
 ################################################################################
