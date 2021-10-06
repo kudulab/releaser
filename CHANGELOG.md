@@ -1,3 +1,7 @@
+### 2.1.3 (2021-Oct-06)
+
+* updated github-release binary
+
 ### 2.1.2 (2019-May-08)
 
 * add `releaser::conditional_verify`
